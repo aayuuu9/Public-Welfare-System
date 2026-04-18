@@ -114,53 +114,38 @@
   </div>
 </div>
 
+<div id="dataBanner" style="padding:10px 28px;font-size:12px;border-left:4px solid var(--blue);background:var(--blue-l);color:var(--blue-d);display:flex;align-items:center;gap:8px">
+  ⏳ Loading results.json…
+</div>
+
 <div class="page">
 
 <!-- ══════════════════ OVERVIEW ══════════════════ -->
 <div id="sec-overview" class="section active">
   <div class="section-title">Dataset Overview</div>
-  <div class="section-sub">Synthetic SNAP + Medicaid + Unemployment welfare dataset (7,500 records) designed to reflect documented historical disparities in public benefit programs. Features: age, income, household size, employment, disability status, prior benefit history.</div>
+  <div id="overviewSub" class="section-sub">Loading pipeline results…</div>
 
-  <div class="grid-4">
-    <div class="card">
-      <div class="card-title">Total Records</div>
-      <div class="metric">7,500</div>
-      <div class="metric-sub">3 program types</div>
-      <span class="metric-badge badge-blue">SNAP · Medicaid · UI</span>
-    </div>
-    <div class="card">
-      <div class="card-title">True Eligibility Rate</div>
-      <div class="metric">62.3%</div>
-      <div class="metric-sub">Income + disability-based</div>
-      <span class="metric-badge badge-green">Ground truth label</span>
-    </div>
-    <div class="card">
-      <div class="card-title">Historical Approval Rate</div>
-      <div class="metric">41.1%</div>
-      <div class="metric-sub">vs 62.3% true eligible</div>
-      <span class="metric-badge badge-red">21.2% gap</span>
-    </div>
-    <div class="card">
-      <div class="card-title">Max Racial Gap</div>
-      <div class="metric">23.9 pp</div>
-      <div class="metric-sub">White 47.8% vs Black 23.9%</div>
-      <span class="metric-badge badge-amber">Systemic bias</span>
-    </div>
+  <div class="grid-4" id="overviewKPIs">
+    <div class="card"><div class="card-title">Total Records</div><div class="metric" id="kpiTotal">—</div><div class="metric-sub" id="kpiTotalSub">loading…</div></div>
+    <div class="card"><div class="card-title">Overall Selection Rate</div><div class="metric" id="kpiSR">—</div><div class="metric-sub" id="kpiSRSub">from Random Forest</div><span id="kpiSRBadge" class="metric-badge badge-blue">—</span></div>
+    <div class="card"><div class="card-title">Model Accuracy (RF)</div><div class="metric" id="kpiAcc">—</div><div class="metric-sub">Random Forest</div><span id="kpiAccBadge" class="metric-badge badge-green">—</span></div>
+    <div class="card"><div class="card-title">Max Racial Gap (DI)</div><div class="metric" id="kpiDI">—</div><div class="metric-sub" id="kpiDISub">Disparate Impact</div><span id="kpiDIBadge" class="metric-badge badge-amber">—</span></div>
   </div>
 
   <div class="two-col">
     <div class="card">
-      <div class="card-title">Historical Approval Rate by Race</div>
-      <div class="alert alert-red" style="margin-bottom:14px"><strong>Key finding:</strong> Historical approval rates show a 23.9 pp disparity between White (47.8%) and Black (23.9%) applicants — replicating documented structural inequities in public welfare systems (O'Neil 2016; Benjamin 2019).</div>
+      <div class="card-title">Selection Rate by Race <span id="approvalSubtitle" style="font-weight:400;text-transform:none;font-size:11px;color:var(--text2)">(Random Forest)</span></div>
+      <div id="approvalAlert" class="alert alert-red" style="margin-bottom:14px"></div>
       <div class="chart-wrap h280"><canvas id="chartApproval"></canvas></div>
       <div class="legend-row" id="approvalLegend"></div>
-      <p class="footnote">Source: Synthetic data calibrated to SNAP/Medicaid disparity literature. Bias injected via income gap (−$3,000 for Black; −$2,000 for Hispanic) and differential approval probability.</p>
+      <p class="footnote" id="approvalFootnote"></p>
     </div>
     <div class="card">
       <div class="card-title">Race & Income Distribution</div>
-      <div class="chart-wrap h280"><canvas id="chartIncome"></canvas></div>
+      <div id="incomeChartWrap" class="chart-wrap h280"><canvas id="chartIncome"></canvas></div>
+      <div id="incomeUnavailable" style="display:none;padding:40px;text-align:center;color:var(--text3);font-size:13px">Income by race not available in results.json.<br>Add <code>income_by_race</code> to dataset_stats in ml_pipeline.py.</div>
       <div class="legend-row" id="incomeLegend"></div>
-      <p class="footnote">Mean income by race group. Reflects documented wage gaps: Black–White income gap ~$2,600; Hispanic–White gap ~$1,700 in this simulation.</p>
+      <p class="footnote" id="incomeFootnote"></p>
       <div class="spacer"></div>
       <div class="card-title">Dataset Composition</div>
       <div class="chart-wrap h160" style="max-width:260px;margin:0 auto"><canvas id="chartPie"></canvas></div>
@@ -277,34 +262,9 @@
     <div class="card-title">Full Model Performance Table</div>
     <table class="tbl">
       <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>AUC-ROC</th><th>Recommendation</th></tr></thead>
-      <tbody>
-        <tr>
-          <td>Logistic Regression</td>
-          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:99.2%;background:#3b82f6"></div></div>99.2%</div></td>
-          <td>99.6%</td><td>99.1%</td><td>99.4%</td><td>100.0%</td>
-          <td><span class="metric-badge badge-green">Interpretable, fair baseline</span></td>
-        </tr>
-        <tr style="background:var(--blue-l)">
-          <td><strong>Random Forest</strong></td>
-          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:99.7%;background:#2563eb"></div></div>99.7%</div></td>
-          <td>99.7%</td><td>99.8%</td><td>99.8%</td><td>100.0%</td>
-          <td><span class="metric-badge badge-blue">⭐ Recommended</span></td>
-        </tr>
-        <tr>
-          <td>Gradient Boosting</td>
-          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#7c3aed"></div></div>100%</div></td>
-          <td>100%</td><td>100%</td><td>100%</td><td>100%</td>
-          <td><span class="metric-badge badge-amber">Overfitting risk</span></td>
-        </tr>
-        <tr style="background:var(--green-l)">
-          <td>Mitigated RF (Reweighing)</td>
-          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:99.9%;background:#16a34a"></div></div>99.9%</div></td>
-          <td>100%</td><td>99.8%</td><td>99.9%</td><td>100.0%</td>
-          <td><span class="metric-badge badge-green">Best fairness profile</span></td>
-        </tr>
-      </tbody>
+      <tbody id="modelPerfTable"></tbody>
     </table>
-    <p class="footnote">All models evaluated on held-out test set. Reweighing uses Kamiran & Calders (2012) sample weights to equalize selection rates. In real-world welfare data, all metrics would be substantially lower.</p>
+    <p class="footnote">All models evaluated on held-out test set (25%). Reweighing uses Kamiran & Calders (2012) sample weights to equalize selection rates.</p>
   </div>
 </div>
 
@@ -352,31 +312,7 @@
 
   <div class="alert alert-red"><strong>Real-world precedent:</strong> Arkansas' Medicaid benefit determination algorithm (2016) denied care to hundreds of disabled patients due to software errors, with no explanation provided (Harper v. Gillespie). Michigan's fraud detection system (MiDAS) wrongly accused 40,000 people of unemployment fraud between 2013–2015, with Black claimants disproportionately affected (Caplan 2017). These cases illustrate how biased fraud detection causes material harm.</div>
 
-  <div class="grid-4">
-    <div class="card">
-      <div class="card-title">Biased Detector — Black FPR</div>
-      <div class="metric">15.1%</div>
-      <div class="metric-sub">vs 5.3% for White</div>
-      <span class="metric-badge badge-red">2.9× disparity</span>
-    </div>
-    <div class="card">
-      <div class="card-title">Fair Detector — Black FPR</div>
-      <div class="metric">8.0%</div>
-      <div class="metric-sub">vs 4.5% for White</div>
-      <span class="metric-badge badge-amber">1.8× disparity (improved)</span>
-    </div>
-    <div class="card">
-      <div class="card-title">Hispanic FPR Reduction</div>
-      <div class="metric">5.4%</div>
-      <div class="metric-sub">From 11.7% (biased)</div>
-      <span class="metric-badge badge-green">-54% FPR reduction</span>
-    </div>
-    <div class="card">
-      <div class="card-title">Mitigation Method</div>
-      <div class="metric" style="font-size:18px">Threshold<br>Equalization</div>
-      <span class="metric-badge badge-blue">Per-group thresholds</span>
-    </div>
-  </div>
+  <div class="grid-4" id="fraudKPIs"></div>
 
   <div class="two-col">
     <div class="card">
@@ -479,44 +415,79 @@
 
 <script>
 // ─────────── DATA ───────────
-// Inline results — no server needed (standalone HTML)
-const RESULTS_JSON = {"dataset_stats":{"info":"Dataset stats available only for synthetic dataset"},"model_performance":{"Logistic Regression":{"accuracy":0.7818,"precision":0.6147,"recall":0.2515,"f1":0.357,"auc":0.7767},"Random Forest":{"accuracy":0.8001,"precision":0.6044,"recall":0.4918,"f1":0.5423,"auc":0.815},"Gradient Boosting":{"accuracy":0.8344,"precision":0.7787,"recall":0.4362,"f1":0.5592,"auc":0.8576}},"fairness_race":{"Logistic Regression":{"White":{"selection_rate":0.0506,"tpr":0.0,"fpr":0.0571,"accuracy":0.8354,"precision":0.0,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.0973,"tpr":0.2727,"fpr":0.0366,"accuracy":0.786,"precision":0.72,"n":257,"disparate_impact":1.9229,"statistical_parity_diff":0.0467},"Hispanic":{"selection_rate":0.069,"tpr":0.2955,"fpr":0.0377,"accuracy":0.8814,"precision":0.52,"n":725,"disparate_impact":1.3636,"statistical_parity_diff":0.0184},"Asian":{"selection_rate":0.0635,"tpr":0.6667,"fpr":0.0333,"accuracy":0.9524,"precision":0.5,"n":63,"disparate_impact":1.2549,"statistical_parity_diff":0.0129}},"Random Forest":{"White":{"selection_rate":0.1519,"tpr":0.3333,"fpr":0.1286,"accuracy":0.8101,"precision":0.25,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1829,"tpr":0.4697,"fpr":0.0838,"accuracy":0.8016,"precision":0.6596,"n":257,"disparate_impact":1.2041,"statistical_parity_diff":0.031},"Hispanic":{"selection_rate":0.1434,"tpr":0.4545,"fpr":0.1005,"accuracy":0.8455,"precision":0.3846,"n":725,"disparate_impact":0.944,"statistical_parity_diff":-0.0085},"Asian":{"selection_rate":0.127,"tpr":0.6667,"fpr":0.1,"accuracy":0.8889,"precision":0.25,"n":63,"disparate_impact":0.8361,"statistical_parity_diff":-0.0249}},"Gradient Boosting":{"White":{"selection_rate":0.0633,"tpr":0.3333,"fpr":0.0286,"accuracy":0.8987,"precision":0.6,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1595,"tpr":0.4697,"fpr":0.0524,"accuracy":0.8249,"precision":0.7561,"n":257,"disparate_impact":2.5197,"statistical_parity_diff":0.0962},"Hispanic":{"selection_rate":0.0621,"tpr":0.3864,"fpr":0.0173,"accuracy":0.9103,"precision":0.7556,"n":725,"disparate_impact":0.981,"statistical_parity_diff":-0.0012},"Asian":{"selection_rate":0.0476,"tpr":0.6667,"fpr":0.0167,"accuracy":0.9683,"precision":0.6667,"n":63,"disparate_impact":0.752,"statistical_parity_diff":-0.0157}}},"fairness_gender":{"Logistic Regression":{"Male":{"selection_rate":0.0626,"tpr":0.2177,"fpr":0.0435,"accuracy":0.8755,"precision":0.381,"n":2683,"disparate_impact":0.0626,"statistical_parity_diff":-0.9374},"Female":{"selection_rate":0.1162,"tpr":0.2575,"fpr":0.0541,"accuracy":0.7358,"precision":0.6767,"n":5458,"disparate_impact":0.1162,"statistical_parity_diff":-0.8838}},"Random Forest":{"Male":{"selection_rate":0.1372,"tpr":0.4524,"fpr":0.0984,"accuracy":0.8524,"precision":0.3614,"n":2683,"disparate_impact":0.1372,"statistical_parity_diff":-0.8628},"Female":{"selection_rate":0.2248,"tpr":0.4988,"fpr":0.1044,"accuracy":0.7745,"precision":0.6773,"n":5458,"disparate_impact":0.2248,"statistical_parity_diff":-0.7752}},"Gradient Boosting":{"Male":{"selection_rate":0.0731,"tpr":0.4048,"fpr":0.0322,"accuracy":0.9061,"precision":0.6071,"n":2683,"disparate_impact":0.0731,"statistical_parity_diff":-0.9269},"Female":{"selection_rate":0.1653,"tpr":0.4418,"fpr":0.0438,"accuracy":0.7992,"precision":0.816,"n":5458,"disparate_impact":0.1653,"statistical_parity_diff":-0.8347}}},"mitigated_performance":{"accuracy":0.7986,"precision":0.601,"recall":0.4857,"f1":0.5372,"auc":0.8143},"mitigated_fairness_race":{"White":{"selection_rate":0.1266,"tpr":0.3333,"fpr":0.1,"accuracy":0.8354,"precision":0.3,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1751,"tpr":0.4545,"fpr":0.0785,"accuracy":0.8016,"precision":0.6667,"n":257,"disparate_impact":1.3831,"statistical_parity_diff":0.0485},"Hispanic":{"selection_rate":0.1366,"tpr":0.4659,"fpr":0.0911,"accuracy":0.8552,"precision":0.4141,"n":725,"disparate_impact":1.079,"statistical_parity_diff":0.01},"Asian":{"selection_rate":0.127,"tpr":0.6667,"fpr":0.1,"accuracy":0.8889,"precision":0.25,"n":63,"disparate_impact":1.0032,"statistical_parity_diff":0.0004}},"feature_importance":{"age":0.02657,"fnlwgt":-0.00054,"education_num":0.03659,"capital_gain":0.0438,"capital_loss":0.01752,"hours_per_week":0.00828},"feature_importance_by_race":{"White":{"age":0.00506,"fnlwgt":-0.0,"education_num":-0.0,"capital_gain":0.00506,"capital_loss":0.01519,"hours_per_week":-0.01013},"Black":{"age":0.04125,"fnlwgt":0.01946,"education_num":0.03735,"capital_gain":0.03346,"capital_loss":0.00467,"hours_per_week":0.01634},"Hispanic":{"age":-0.0011,"fnlwgt":-0.02069,"education_num":0.00055,"capital_gain":0.03338,"capital_loss":0.01766,"hours_per_week":-0.01434},"Asian":{"age":-0.06032,"fnlwgt":-0.04762,"education_num":-0.04444,"capital_gain":0.06349,"capital_loss":-0.00952,"hours_per_week":-0.02857}},"dp_selection_rates":{"Logistic Regression":{"White":0,"Black":0,"Hispanic":0,"Asian":0},"Random Forest":{"White":0.0074,"Black":0.0384,"Hispanic":0,"Asian":0},"Gradient Boosting":{"White":0,"Black":0.015,"Hispanic":0,"Asian":0}},"fraud_case_study":{"biased":{"White":{"selection_rate":0.1259,"tpr":0.4103,"fpr":0.0527,"accuracy":0.8373,"precision":0.6676,"n":2938,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1879,"tpr":0.4466,"fpr":0.151,"accuracy":0.7988,"precision":0.2968,"n":825,"disparate_impact":1.4925,"statistical_parity_diff":0.062},"Hispanic":{"selection_rate":0.1693,"tpr":0.4406,"fpr":0.1167,"accuracy":0.8114,"precision":0.4228,"n":880,"disparate_impact":1.3447,"statistical_parity_diff":0.0434},"Asian":{"selection_rate":0.1261,"tpr":0.4096,"fpr":0.0401,"accuracy":0.8319,"precision":0.7556,"n":357,"disparate_impact":1.0016,"statistical_parity_diff":0.0002}},"fair":{"White":{"selection_rate":0.1501,"tpr":0.5581,"fpr":0.0449,"accuracy":0.8737,"precision":0.7619,"n":2938,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1503,"tpr":0.6408,"fpr":0.0803,"accuracy":0.8848,"precision":0.5323,"n":825,"disparate_impact":1.0013,"statistical_parity_diff":0.0002},"Hispanic":{"selection_rate":0.15,"tpr":0.6434,"fpr":0.0543,"accuracy":0.8966,"precision":0.697,"n":880,"disparate_impact":0.9993,"statistical_parity_diff":-0.0001},"Asian":{"selection_rate":0.1513,"tpr":0.4458,"fpr":0.062,"accuracy":0.8235,"precision":0.6852,"n":357,"disparate_impact":1.008,"statistical_parity_diff":0.0012}}}};
-
 let DATA = {};
-async function loadData() {
-  const apiData = RESULTS_JSON;
+let IS_REAL_DATA = false;
 
-  // Derived dataset_stats (not in results.json — computed from synthesis.py parameters)
-  // Race distribution: White 60%, Black 15%, Hispanic 18%, Asian 7% of 7500
-  const TOTAL = 7500;
-  apiData.dataset_stats.race_distribution = { White: 4500, Black: 1125, Hispanic: 1350, Asian: 525 };
-  // Historical approval rates from the synthesis bias: White ~47.8%, Black ~23.9%, Hispanic ~32%, Asian ~44%
-  apiData.dataset_stats.approval_by_race  = { White: 0.478, Black: 0.239, Hispanic: 0.320, Asian: 0.440 };
-  // Mean income: base 28000, Black -3000, Hispanic -2000, Asian +0
-  apiData.dataset_stats.income_by_race    = { White: 28000, Black: 25000, Hispanic: 26000, Asian: 28000 };
+async function loadData() {
+  let apiData;
+  try {
+    const res = await fetch("results.json");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    apiData = await res.json();
+    console.log("✅ Loaded results.json");
+  } catch(e) {
+    console.error("Could not load results.json:", e.message);
+    const banner = document.getElementById('dataBanner');
+    banner.innerHTML = '⚠️ <strong>results.json not found.</strong> Run <code>python ml_pipeline.py</code> first, then place <code>results.json</code> in the same folder as this HTML file.';
+    banner.style.cssText += 'background:var(--red-l);border-color:var(--red);color:#7f1d1d;';
+    return;
+  }
+
+  // ── Detect real vs synthetic ──
+  IS_REAL_DATA = !(apiData.dataset_stats?.info?.includes?.("synthetic"));
+  const banner = document.getElementById('dataBanner');
+  if (IS_REAL_DATA) {
+    const total = apiData.dataset_stats?.total_records;
+    banner.innerHTML = `✅ <strong>Live Pipeline Results</strong> — UCI Adult Census dataset&nbsp; ${total ? '| ' + total.toLocaleString() + ' records' : ''} &nbsp;| Target: income &gt;$50K &nbsp;| <code>USE_REAL_DATA = True</code>`;
+    banner.style.cssText += 'background:var(--green-l);border-color:var(--green);color:#14532d;';
+  } else {
+    banner.innerHTML = `🔬 <strong>Synthetic Dataset Results</strong> — SNAP/Welfare simulation. Switch to real data: set <code>USE_REAL_DATA = True</code> in <code>ml_pipeline.py</code> and re-run.`;
+    banner.style.cssText += 'background:var(--blue-l);border-color:var(--blue);color:var(--blue-d);';
+  }
+
+  // ── Normalise dataset_stats ──
+  // Real data: pipeline writes total_records, race_distribution, approval_by_race, income_by_race
+  // Synthetic: those keys are absent → derive from fairness_race metrics
+  const ds = apiData.dataset_stats || {};
+  const rfRace = apiData.fairness_race?.["Random Forest"] || {};
+  const allGroups = Object.keys(rfRace);
+
+  if (!ds.race_distribution || Object.keys(ds.race_distribution).length === 0) {
+    ds.race_distribution = Object.fromEntries(allGroups.map(g => [g, rfRace[g]?.n || 0]));
+  }
+  if (!ds.approval_by_race || Object.keys(ds.approval_by_race).length === 0) {
+    ds.approval_by_race = Object.fromEntries(allGroups.map(g => [g, rfRace[g]?.selection_rate || 0]));
+  }
+  if (!ds.income_by_race || Object.keys(ds.income_by_race).length === 0) {
+    // Not computable from results.json — leave as null so chart shows graceful message
+    ds.income_by_race = null;
+  }
 
   DATA = {
-    approval_by_race: apiData.dataset_stats.approval_by_race,
-    income_by_race:   apiData.dataset_stats.income_by_race,
-    race_counts:      apiData.dataset_stats.race_distribution,
+    is_real: IS_REAL_DATA,
+    dataset_stats: ds,
+    approval_by_race: ds.approval_by_race,
+    income_by_race:   ds.income_by_race,
+    race_counts:      ds.race_distribution,
     fairness: {
-      rf:        apiData.fairness_race["Random Forest"],
-      lr:        apiData.fairness_race["Logistic Regression"],
-      gb:        apiData.fairness_race["Gradient Boosting"],
-      mitigated: apiData.mitigated_fairness_race
+      rf:        apiData.fairness_race?.["Random Forest"]        || {},
+      lr:        apiData.fairness_race?.["Logistic Regression"]  || {},
+      gb:        apiData.fairness_race?.["Gradient Boosting"]    || {},
+      mitigated: apiData.mitigated_fairness_race                 || {}
     },
     models: {
-      rf: apiData.model_performance["Random Forest"],
-      lr: apiData.model_performance["Logistic Regression"],
-      gb: apiData.model_performance["Gradient Boosting"]
+      rf: apiData.model_performance?.["Random Forest"]       || {},
+      lr: apiData.model_performance?.["Logistic Regression"] || {},
+      gb: apiData.model_performance?.["Gradient Boosting"]   || {}
     },
-    features:         apiData.feature_importance,
-    features_by_race: apiData.feature_importance_by_race,
-    fraud:            apiData.fraud_case_study,
-    dp:               apiData.dp_selection_rates,
+    features:         apiData.feature_importance          || {},
+    features_by_race: apiData.feature_importance_by_race  || {},
+    fraud:            apiData.fraud_case_study            || { biased:{}, fair:{} },
+    dp:               apiData.dp_selection_rates          || {},
     gender: {
-      rf: apiData.fairness_gender["Random Forest"]
-    }
+      rf: apiData.fairness_gender?.["Random Forest"] || {}
+    },
+    _mitigatedPerf: apiData.mitigated_performance || null
   };
 }
 
@@ -533,20 +504,55 @@ function showSection(id) {
 
 // ─────────── OVERVIEW CHARTS ───────────
 function initOverview() {
-  if (!DATA.approval_by_race) {
-  console.error("approval_by_race missing", DATA);
-  return;
-}
-const groups = Object.keys(DATA.approval_by_race);
-  const vals   = Object.values(DATA.approval_by_race);
-  const income = Object.values(DATA.income_by_race);
-  const colors = groups.map(g => COLORS[g]);
+  const ds = DATA.dataset_stats || {};
+  const rfRace = DATA.fairness.rf || {};
+  const groups = Object.keys(DATA.approval_by_race || {});
+  if (!groups.length) { console.error("No race groups found"); return; }
 
-  // Approval bar chart
+  const vals   = groups.map(g => DATA.approval_by_race[g] || 0);
+  const colors = groups.map(g => COLORS[g] || '#aaa');
+
+  // ── Dynamic subtitle ──
+  document.getElementById('overviewSub').textContent = DATA.is_real
+    ? 'UCI Adult Census dataset — ' + (ds.total_records?.toLocaleString() || '') + ' records. Target: income >$50K. Race groups encoded from the "race" column. All metrics reflect actual ml_pipeline.py output.'
+    : 'Synthetic SNAP + Medicaid + Unemployment welfare dataset. Features: age, income, household size, employment, disability, prior benefit history.';
+
+  // ── KPI cards ──
+  const totalN = Object.values(DATA.race_counts || {}).reduce((a,b)=>a+b,0);
+  document.getElementById('kpiTotal').textContent = totalN.toLocaleString();
+  document.getElementById('kpiTotalSub').textContent = DATA.is_real ? 'UCI Adult Census' : '3 program types';
+
+  const overallSR = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length*100).toFixed(1)+'%' : '—';
+  document.getElementById('kpiSR').textContent = overallSR;
+
+  const acc = DATA.models.rf?.accuracy;
+  document.getElementById('kpiAcc').textContent = acc ? (acc*100).toFixed(1)+'%' : '—';
+  document.getElementById('kpiAccBadge').textContent = acc ? (acc>=0.9?'✓ High':'⚠ Moderate') : '—';
+
+  const diVals = groups.map(g => rfRace[g]?.disparate_impact || 1);
+  const maxDI = Math.max(...diVals);
+  const minDI = Math.min(...diVals);
+  const worstGroup = groups[diVals.indexOf(minDI)];
+  document.getElementById('kpiDI').textContent = minDI.toFixed(3);
+  document.getElementById('kpiDISub').textContent = `Min DI — ${worstGroup} group`;
+  document.getElementById('kpiDIBadge').textContent = minDI < 0.8 ? '⚠ Adverse impact' : minDI < 0.9 ? 'Moderate gap' : '✓ Within range';
+  document.getElementById('kpiDIBadge').className = 'metric-badge ' + (minDI<0.8?'badge-red':minDI<0.9?'badge-amber':'badge-green');
+
+  // ── Approval alert ──
+  const maxSR = Math.max(...vals), minSR = Math.min(...vals);
+  const maxG = groups[vals.indexOf(maxSR)], minG = groups[vals.indexOf(minSR)];
+  const gapPP = ((maxSR - minSR)*100).toFixed(1);
+  document.getElementById('approvalAlert').innerHTML = `<strong>Key finding:</strong> Selection rate gap of ${gapPP} pp between ${maxG} (${(maxSR*100).toFixed(1)}%) and ${minG} (${(minSR*100).toFixed(1)}%) — ${DATA.is_real ? 'from real UCI Adult data via ml_pipeline.py.' : 'replicating documented structural inequities (O\'Neil 2016; Benjamin 2019).'}`;
+  document.getElementById('approvalFootnote').textContent = DATA.is_real
+    ? 'Source: Live ml_pipeline.py output on UCI Adult Census. Selection rate = fraction of group predicted income >$50K by Random Forest.'
+    : 'Source: Synthetic data calibrated to SNAP/Medicaid disparity literature. Bias injected via income gap and differential approval probability.';
+
+  // ── Selection rate chart (dynamic Y scale) ──
+  const maxPct = Math.ceil(Math.max(...vals)*100/10)*10 + 10;
   new Chart(document.getElementById('chartApproval'), {
     type:'bar',
     data: { labels:groups, datasets:[{
-      label:'Historical Approval Rate',
+      label:'Selection Rate',
       data: vals.map(v => +(v*100).toFixed(1)),
       backgroundColor: colors.map(c=>c+'cc'),
       borderColor: colors, borderWidth:1.5, borderRadius:6
@@ -555,42 +561,52 @@ const groups = Object.keys(DATA.approval_by_race);
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.toFixed(1)}%`}}},
       scales:{
-        y:{beginAtZero:true,max:60,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},
+        y:{beginAtZero:true,max:maxPct,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},
         x:{grid:{display:false}}
       }
     }
   });
-  
+
   const approvalLeg = document.getElementById('approvalLegend');
   approvalLeg.innerHTML = '';
   groups.forEach((g,i) => {
     approvalLeg.innerHTML += `<div class="legend-item"><div class="legend-swatch" style="background:${colors[i]}"></div>${g}: ${(vals[i]*100).toFixed(1)}%</div>`;
   });
 
-  // Income bar
-  new Chart(document.getElementById('chartIncome'), {
-    type:'bar',
-    data: { labels:groups, datasets:[{
-      label:'Mean Income ($)',
-      data: income,
-      backgroundColor: colors.map(c=>c+'99'),
-      borderColor: colors, borderWidth:1.5, borderRadius:6
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`$${c.raw.toLocaleString()}`}}},
-      scales:{
-        y:{beginAtZero:false,min:22000,ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}},
-        x:{grid:{display:false}}
+  // ── Income chart ──
+  if (DATA.income_by_race && Object.values(DATA.income_by_race).some(v=>v>0)) {
+    const income = groups.map(g => DATA.income_by_race[g] || 0);
+    const minInc = Math.min(...income);
+    const yMin = Math.floor(minInc * 0.92 / 1000) * 1000;
+    new Chart(document.getElementById('chartIncome'), {
+      type:'bar',
+      data: { labels:groups, datasets:[{
+        label:'Mean Income ($)',
+        data: income,
+        backgroundColor: colors.map(c=>c+'99'),
+        borderColor: colors, borderWidth:1.5, borderRadius:6
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`$${c.raw.toLocaleString()}`}}},
+        scales:{
+          y:{beginAtZero:false,min:yMin,ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(0,0,0,0.05)'}},
+          x:{grid:{display:false}}
+        }
       }
-    }
-  });
+    });
+    document.getElementById('incomeFootnote').textContent = 'Mean income by race group from pipeline dataset_stats.income_by_race.';
+  } else {
+    document.getElementById('incomeChartWrap').style.display = 'none';
+    document.getElementById('incomeUnavailable').style.display = 'block';
+    document.getElementById('incomeFootnote').textContent = 'Add income_by_race to dataset_stats in ml_pipeline.py to show this chart with real data.';
+  }
 
-  // Pie
-  const counts = Object.values(DATA.race_counts);
+  // ── Pie ──
+  const counts = groups.map(g => DATA.race_counts[g] || 0);
   new Chart(document.getElementById('chartPie'), {
     type:'doughnut',
-    data:{ labels:Object.keys(DATA.race_counts), datasets:[{data:counts,backgroundColor:Object.keys(DATA.race_counts).map(g=>COLORS[g]+'cc'),borderWidth:2,borderColor:'#fff'}] },
+    data:{ labels:groups, datasets:[{data:counts,backgroundColor:colors.map(c=>c+'cc'),borderWidth:2,borderColor:'#fff'}] },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
   });
 }
@@ -600,60 +616,69 @@ let fairCharts = {};
 function renderFairness() {
   const sel = document.getElementById('modelSel').value;
   const d   = DATA.fairness[sel];
+  const activeGroups = Object.keys(d).filter(g => d[g] && d[g].n > 0);
+  if (!activeGroups.length) return;
 
   // KPIs
   const kpi = document.getElementById('fairnessKPIs');
   kpi.innerHTML = '';
-  const maxDI = Math.max(...GROUPS.map(g=>d[g].disparate_impact));
-  const minDI = Math.min(...GROUPS.map(g=>d[g].disparate_impact));
-  const maxSPD = Math.max(...GROUPS.map(g=>Math.abs(d[g].statistical_parity_diff)));
+  const maxDI  = Math.max(...activeGroups.map(g=>d[g].disparate_impact||1));
+  const minDI  = Math.min(...activeGroups.map(g=>d[g].disparate_impact||1));
+  const maxSPD = Math.max(...activeGroups.map(g=>Math.abs(d[g].statistical_parity_diff||0)));
 
   kpi.innerHTML = `
     <div class="card"><div class="card-title">Min Disparate Impact</div><div class="metric">${minDI.toFixed(3)}</div><span class="metric-badge ${minDI<0.85?'badge-red':minDI<0.9?'badge-amber':'badge-green'}">${minDI<0.8?'⚠ Adverse impact':'✓ Within range'}</span></div>
     <div class="card"><div class="card-title">Max Disparate Impact</div><div class="metric">${maxDI.toFixed(3)}</div><span class="metric-badge ${maxDI>1.25?'badge-red':maxDI>1.1?'badge-amber':'badge-green'}">${maxDI>1.25?'⚠ Above threshold':'✓ Within range'}</span></div>
     <div class="card"><div class="card-title">Max |Stat. Parity Diff|</div><div class="metric">${maxSPD.toFixed(4)}</div><span class="metric-badge ${maxSPD>0.1?'badge-red':maxSPD>0.05?'badge-amber':'badge-green'}">${maxSPD>0.05?'Moderate gap':'Near parity'}</span></div>
-    <div class="card"><div class="card-title">Equal Opportunity</div><div class="metric">${GROUPS.every(g=>d[g].tpr>=0.99)?'Met':'Partial'}</div><span class="metric-badge ${GROUPS.every(g=>d[g].tpr>=0.99)?'badge-green':'badge-amber'}">TPR ≥ 0.99 across groups</span></div>
+    <div class="card"><div class="card-title">AUC (Random Forest)</div><div class="metric">${DATA.models.rf?.auc ? (DATA.models.rf.auc*100).toFixed(1)+'%' : '—'}</div><span class="metric-badge badge-blue">Test set AUC-ROC</span></div>
   `;
 
   // Destroy old charts
   ['chartSelRate','chartTPR'].forEach(id => { if(fairCharts[id]) fairCharts[id].destroy(); });
 
-  // Selection rate
+  const grpColors = activeGroups.map(g => COLORS[g]||'#aaa');
+
+  // Selection rate — dynamic scale
+  const srVals = activeGroups.map(g=>(d[g].selection_rate||0)*100);
+  const srMax  = Math.ceil(Math.max(...srVals)/5)*5 + 5;
   fairCharts['chartSelRate'] = new Chart(document.getElementById('chartSelRate'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[{
+    data:{ labels:activeGroups, datasets:[{
       label:'Selection Rate',
-      data: GROUPS.map(g=>(d[g].selection_rate*100).toFixed(2)),
-      backgroundColor: GROUPS.map(g=>COLORS[g]+'cc'), borderColor: GROUPS.map(g=>COLORS[g]),
+      data: srVals.map(v=>v.toFixed(2)),
+      backgroundColor: grpColors.map(c=>c+'cc'), borderColor: grpColors,
       borderWidth:1.5, borderRadius:6
     }]},
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}},
-      scales:{y:{min:50,max:75,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}
+      scales:{y:{beginAtZero:true,max:srMax,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}
     }
   });
 
-  // TPR
+  // TPR — dynamic scale
+  const tprVals = activeGroups.map(g=>(d[g].tpr||0)*100);
+  const tprMin  = Math.max(0, Math.floor(Math.min(...tprVals)/5)*5 - 5);
+  const tprMax  = Math.min(100, Math.ceil(Math.max(...tprVals)/5)*5 + 5);
   fairCharts['chartTPR'] = new Chart(document.getElementById('chartTPR'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[{
+    data:{ labels:activeGroups, datasets:[{
       label:'True Positive Rate',
-      data: GROUPS.map(g=>(d[g].tpr*100).toFixed(2)),
-      backgroundColor: GROUPS.map(g=>COLORS[g]+'cc'), borderColor: GROUPS.map(g=>COLORS[g]),
+      data: tprVals.map(v=>v.toFixed(2)),
+      backgroundColor: grpColors.map(c=>c+'cc'), borderColor: grpColors,
       borderWidth:1.5, borderRadius:6
     }]},
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}},
-      scales:{y:{min:97,max:101,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}
+      scales:{y:{min:tprMin,max:tprMax,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}
     }
   });
 
   // Table
   const tbody = document.querySelector('#fairnessTable tbody');
   tbody.innerHTML = '';
-  GROUPS.forEach(g => {
+  activeGroups.forEach(g => {
     const r = d[g];
     const diClass = r.disparate_impact < 0.8 || r.disparate_impact > 1.25 ? 'badge-red' : r.disparate_impact < 0.9 || r.disparate_impact > 1.1 ? 'badge-amber' : 'badge-green';
     tbody.innerHTML += `<tr>
@@ -668,77 +693,142 @@ function renderFairness() {
     </tr>`;
   });
 
-  const gd = DATA.gender.rf;
-  ['Male','Female'].forEach(g => {
+  // Gender stats
+  const gd = DATA.gender.rf || {};
+  const genderGroups = Object.keys(gd);
+  document.getElementById('genderStats').innerHTML = '';
+  genderGroups.forEach(g => {
     const r = gd[g];
-    document.getElementById('genderStats').innerHTML += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${g}</span><span>SR: ${(r.selection_rate*100).toFixed(1)}% | TPR: ${(r.tpr*100).toFixed(1)}% | N: ${r.n}</span></div>`;
+    if (!r) return;
+    document.getElementById('genderStats').innerHTML += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${g}</span><span>SR: ${(r.selection_rate*100).toFixed(1)}% | TPR: ${(r.tpr*100).toFixed(1)}% | N: ${r.n?.toLocaleString()}</span></div>`;
   });
-  if(!fairCharts['chartGender']) {
+  if(!fairCharts['chartGender'] && genderGroups.length) {
+    const gSRVals = genderGroups.map(g => (gd[g]?.selection_rate||0)*100);
+    const gMax = Math.ceil(Math.max(...gSRVals)/5)*5 + 5;
     fairCharts['chartGender'] = new Chart(document.getElementById('chartGender'), {
       type:'bar',
-      data:{ labels:['Male','Female'], datasets:[
-        { label:'Selection Rate', data:[61.3,64.2], backgroundColor:['#3b82f6cc','#f59e0bcc'], borderColor:['#3b82f6','#f59e0b'], borderWidth:1.5, borderRadius:6 }
+      data:{ labels:genderGroups, datasets:[
+        { label:'Selection Rate', data:gSRVals.map(v=>v.toFixed(1)), backgroundColor:['#3b82f6cc','#f59e0bcc'], borderColor:['#3b82f6','#f59e0b'], borderWidth:1.5, borderRadius:6 }
       ]},
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{min:55,max:70,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}} }
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:gMax,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}} }
     });
   }
 }
 
 // ─────────── MODELS ───────────
 function initModels() {
+  const pct = v => v != null ? (v*100).toFixed(1)+'%' : '—';
   const statHTML = (m) => `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-      <div class="metric-badge badge-blue" style="text-align:center">F1 ${(m.f1*100).toFixed(1)}%</div>
-      <div class="metric-badge badge-green" style="text-align:center">AUC ${(m.auc*100).toFixed(1)}%</div>
-      <div class="metric-badge badge-amber" style="text-align:center">P ${(m.precision*100).toFixed(1)}%</div>
-      <div class="metric-badge badge-purple" style="text-align:center">R ${(m.recall*100).toFixed(1)}%</div>
+      <div class="metric-badge badge-blue" style="text-align:center">F1 ${pct(m.f1)}</div>
+      <div class="metric-badge badge-green" style="text-align:center">AUC ${pct(m.auc)}</div>
+      <div class="metric-badge badge-amber" style="text-align:center">P ${pct(m.precision)}</div>
+      <div class="metric-badge badge-purple" style="text-align:center">R ${pct(m.recall)}</div>
     </div>`;
   document.getElementById('lrStats').innerHTML = statHTML(DATA.models.lr);
   document.getElementById('rfStats').innerHTML = statHTML(DATA.models.rf);
 
-  // Radar
+  // Update model card headlines with real accuracy
+  const m2p = (m,d) => m?.[d] != null ? (m[d]*100).toFixed(1)+'%' : '—';
+  document.querySelector('#sec-models .grid-3 .card:nth-child(1) .metric').textContent = m2p(DATA.models.lr,'accuracy');
+  document.querySelector('#sec-models .grid-3 .card:nth-child(2) .metric').textContent = m2p(DATA.models.rf,'accuracy');
+  document.querySelector('#sec-models .grid-3 .card:nth-child(3) .metric').textContent = m2p(DATA.models.gb,'accuracy');
+
+  // Radar — use real data
+  const toRadar = m => [m.accuracy,m.precision,m.recall,m.f1,m.auc].map(v=>(v||0)*100);
+  const radarMin = 0;
   new Chart(document.getElementById('chartRadar'), {
     type:'radar',
     data:{
       labels:['Accuracy','Precision','Recall','F1','AUC'],
       datasets:[
-        { label:'Logistic Regression', data:[99.2,99.57,99.14,99.36,99.98], borderColor:'#3b82f6', backgroundColor:'#3b82f622', pointBackgroundColor:'#3b82f6', borderWidth:2 },
-        { label:'Random Forest',       data:[99.73,99.74,99.83,99.79,100],  borderColor:'#10b981', backgroundColor:'#10b98122', pointBackgroundColor:'#10b981', borderWidth:2 },
-        { label:'Gradient Boosting',   data:[100,100,100,100,100],           borderColor:'#8b5cf6', backgroundColor:'#8b5cf622', pointBackgroundColor:'#8b5cf6', borderWidth:2 }
+        { label:'Logistic Regression', data:toRadar(DATA.models.lr), borderColor:'#3b82f6', backgroundColor:'#3b82f622', pointBackgroundColor:'#3b82f6', borderWidth:2 },
+        { label:'Random Forest',       data:toRadar(DATA.models.rf), borderColor:'#10b981', backgroundColor:'#10b98122', pointBackgroundColor:'#10b981', borderWidth:2 },
+        { label:'Gradient Boosting',   data:toRadar(DATA.models.gb), borderColor:'#8b5cf6', backgroundColor:'#8b5cf622', pointBackgroundColor:'#8b5cf6', borderWidth:2 }
       ]
     },
-    options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:false,min:98.5,max:100.5,ticks:{stepSize:0.5,font:{size:10}},grid:{color:'rgba(0,0,0,0.1)'}}},plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,min:0,ticks:{stepSize:20,font:{size:10}},grid:{color:'rgba(0,0,0,0.1)'}}},plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
   });
 
-  // Trade-off scatter
+  // Trade-off scatter — use real accuracy + max DI
+  const getMaxDI = (modelFairness) => {
+    const groups = Object.keys(modelFairness || {});
+    if (!groups.length) return 1;
+    return Math.max(...groups.map(g => modelFairness[g]?.disparate_impact || 1));
+  };
+  const lrDI  = getMaxDI(DATA.fairness.lr);
+  const rfDI  = getMaxDI(DATA.fairness.rf);
+  const gbDI  = getMaxDI(DATA.fairness.gb);
+  const mitDI = getMaxDI(DATA.fairness.mitigated);
+  const allDI = [lrDI, rfDI, gbDI, mitDI].filter(v=>isFinite(v));
+  const diMin = allDI.length ? Math.max(0, Math.min(...allDI) - 0.1) : 0;
+  const diMax = allDI.length ? Math.max(...allDI) + 0.1 : 3;
+  const allAcc = [DATA.models.lr, DATA.models.rf, DATA.models.gb].map(m=>(m?.accuracy||0)*100).filter(v=>v>0);
+  const accMin = allAcc.length ? Math.max(0, Math.min(...allAcc) - 5) : 0;
+  const accMax = allAcc.length ? Math.min(100, Math.max(...allAcc) + 2) : 100;
   new Chart(document.getElementById('chartTradeoff'), {
     type:'scatter',
     data:{ datasets:[
-      { label:'Logistic Reg.', data:[{x:99.2,y:1.073}], backgroundColor:'#3b82f6', pointRadius:10, pointHoverRadius:12 },
-      { label:'Random Forest', data:[{x:99.73,y:1.083}], backgroundColor:'#10b981', pointRadius:10, pointHoverRadius:12 },
-      { label:'Gradient Boost', data:[{x:100,y:1.083}], backgroundColor:'#8b5cf6', pointRadius:10, pointHoverRadius:12 },
-      { label:'Mitigated RF', data:[{x:99.89,y:1.088}], backgroundColor:'#f59e0b', pointRadius:12, pointHoverRadius:14 }
+      { label:'Logistic Reg.',  data:[{x:+((DATA.models.lr.accuracy||0)*100).toFixed(2), y:lrDI}],  backgroundColor:'#3b82f6', pointRadius:10, pointHoverRadius:12 },
+      { label:'Random Forest',  data:[{x:+((DATA.models.rf.accuracy||0)*100).toFixed(2), y:rfDI}],  backgroundColor:'#10b981', pointRadius:10, pointHoverRadius:12 },
+      { label:'Gradient Boost', data:[{x:+((DATA.models.gb.accuracy||0)*100).toFixed(2), y:gbDI}],  backgroundColor:'#8b5cf6', pointRadius:10, pointHoverRadius:12 },
+      { label:'Mitigated RF',   data:[{x:+((DATA.models.rf.accuracy||0)*100).toFixed(2), y:mitDI}], backgroundColor:'#f59e0b', pointRadius:12, pointHoverRadius:14 }
     ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{boxWidth:8,font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: Acc=${c.raw.x}%, Max DI=${c.raw.y}`}}},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:8,font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: Acc=${c.raw.x}%, Max DI=${c.raw.y.toFixed(3)}`}}},
       scales:{
-        x:{title:{display:true,text:'Accuracy (%)'},min:98.8,max:100.2,grid:{color:'rgba(0,0,0,0.05)'}},
-        y:{title:{display:true,text:'Max Disparate Impact'},min:1.05,max:1.12,grid:{color:'rgba(0,0,0,0.05)'}}
+        x:{title:{display:true,text:'Accuracy (%)'},min:accMin,max:accMax,grid:{color:'rgba(0,0,0,0.05)'}},
+        y:{title:{display:true,text:'Max Disparate Impact'},min:diMin,max:diMax,grid:{color:'rgba(0,0,0,0.05)'}}
       }
     }
   });
+
+  // Models performance table
+  const modelRows = [
+    { key:'lr', label:'Logistic Regression',     color:'#3b82f6', bg:'',              badge:'badge-green', rec:'Interpretable, fair baseline' },
+    { key:'rf', label:'Random Forest ⭐',         color:'#2563eb', bg:'var(--blue-l)', badge:'badge-blue',  rec:'⭐ Recommended' },
+    { key:'gb', label:'Gradient Boosting',        color:'#7c3aed', bg:'',              badge:'badge-amber', rec:'Overfitting risk' },
+  ];
+  const perfMap = { lr: DATA.models.lr, rf: DATA.models.rf, gb: DATA.models.gb };
+  const tbody2 = document.getElementById('modelPerfTable');
+  if (tbody2) {
+    tbody2.innerHTML = '';
+    modelRows.forEach(row => {
+      const m = perfMap[row.key] || {};
+      const acc = m.accuracy != null ? (m.accuracy*100).toFixed(1) : '—';
+      const pct = v => v != null ? (v*100).toFixed(1)+'%' : '—';
+      tbody2.innerHTML += `<tr style="${row.bg?'background:'+row.bg:''}">
+        <td>${row.label}</td>
+        <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(parseFloat(acc)||0,100)}%;background:${row.color}"></div></div>${acc}%</div></td>
+        <td>${pct(m.precision)}</td><td>${pct(m.recall)}</td><td>${pct(m.f1)}</td><td>${pct(m.auc)}</td>
+        <td><span class="metric-badge ${row.badge}">${row.rec}</span></td>
+      </tr>`;
+    });
+    if (DATA._mitigatedPerf) {
+      const m = DATA._mitigatedPerf;
+      const acc = m.accuracy != null ? (m.accuracy*100).toFixed(1) : '—';
+      const pct = v => v != null ? (v*100).toFixed(1)+'%' : '—';
+      tbody2.innerHTML += `<tr style="background:var(--green-l)">
+        <td>Mitigated RF (Reweighing)</td>
+        <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${Math.min(parseFloat(acc)||0,100)}%;background:#16a34a"></div></div>${acc}%</div></td>
+        <td>${pct(m.precision)}</td><td>${pct(m.recall)}</td><td>${pct(m.f1)}</td><td>${pct(m.auc)}</td>
+        <td><span class="metric-badge badge-green">Best fairness profile</span></td>
+      </tr>`;
+    }
+  }
 }
 
 // ─────────── EXPLAINABILITY ───────────
 function initExplainability() {
   const feats = Object.keys(DATA.features);
   const vals  = Object.values(DATA.features);
+  if (!feats.length) return;
   const clrs  = vals.map(v => v > 0.05 ? '#ef444499' : v > 0 ? '#f59e0b99' : '#6b728099');
   const bclrs = vals.map(v => v > 0.05 ? '#ef4444' : v > 0 ? '#f59e0b' : '#6b7280');
 
   new Chart(document.getElementById('chartFeat'), {
     type:'bar',
-    data:{ labels:feats.map(f=>f.replace('_',' ')), datasets:[{
+    data:{ labels:feats.map(f=>f.replace(/_/g,' ')), datasets:[{
       label:'Permutation Importance',
       data: vals,
       backgroundColor: clrs, borderColor: bclrs, borderWidth:1.5, borderRadius:4
@@ -750,105 +840,137 @@ function initExplainability() {
     }
   });
 
-  // Group feature importance
-  const groupColors = {White:'#3b82f6',Black:'#f59e0b',Hispanic:'#10b981',Asian:'#8b5cf6'};
-  const datasets = GROUPS.map(g => ({
-    label: g,
-    data: feats.map(f=>DATA.features_by_race[g][f]),
-    backgroundColor: groupColors[g]+'99', borderColor: groupColors[g], borderWidth:1.5, borderRadius:3
-  }));
-  new Chart(document.getElementById('chartFeatGroup'), {
-    type:'bar',
-    data:{ labels:feats.map(f=>f.replace('_',' ')), datasets },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},
-      scales:{
-        x:{grid:{display:false}},
-        y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>v.toFixed(2)}}
+  const raceGroups = Object.keys(DATA.features_by_race || {});
+  if (raceGroups.length) {
+    const groupColors = {White:'#3b82f6',Black:'#f59e0b',Hispanic:'#10b981',Asian:'#8b5cf6'};
+    const datasets = raceGroups.map(g => ({
+      label: g,
+      data: feats.map(f => DATA.features_by_race[g]?.[f] || 0),
+      backgroundColor: (groupColors[g]||'#aaa')+'99',
+      borderColor: groupColors[g]||'#aaa', borderWidth:1.5, borderRadius:3
+    }));
+    new Chart(document.getElementById('chartFeatGroup'), {
+      type:'bar',
+      data:{ labels:feats.map(f=>f.replace(/_/g,' ')), datasets },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},
+        scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>v.toFixed(2)}}}
       }
-    }
-  });
+    });
+  }
 }
 
 // ─────────── CASE STUDY ───────────
 function initCaseStudy() {
   const bd = DATA.fraud.biased, fd = DATA.fraud.fair;
+  const fraudGroups = Object.keys(bd).filter(g => bd[g] && fd[g]);
+  if (!fraudGroups.length) return;
+  const fColors = fraudGroups.map(g => COLORS[g]||'#aaa');
+
+  // Dynamic KPI cards
+  const kpiEl = document.getElementById('fraudKPIs');
+  if (kpiEl) {
+    // Find worst group by biased FPR
+    const worstG = fraudGroups.reduce((a,b) => (bd[a]?.fpr||0) > (bd[b]?.fpr||0) ? a : b);
+    const bestG  = 'White'; // privileged reference
+    const bFPR   = bd[worstG]?.fpr || 0;
+    const wFPR   = bd[bestG]?.fpr  || 0;
+    const fFPR   = fd[worstG]?.fpr || 0;
+    const ratio  = wFPR > 0 ? (bFPR/wFPR).toFixed(1) : '—';
+    const fRatio = wFPR > 0 ? (fFPR/(fd[bestG]?.fpr||wFPR)).toFixed(1) : '—';
+    // Find group with best FPR reduction
+    const redG = fraudGroups.filter(g=>g!==bestG).reduce((a,b)=>((bd[a]?.fpr-fd[a]?.fpr)/bd[a]?.fpr)>((bd[b]?.fpr-fd[b]?.fpr)/bd[b]?.fpr)?a:b, fraudGroups[0]);
+    const redPct = bd[redG]?.fpr > 0 ? ((bd[redG].fpr-fd[redG].fpr)/bd[redG].fpr*100).toFixed(0) : 0;
+    kpiEl.innerHTML = `
+      <div class="card"><div class="card-title">Biased Detector — ${worstG} FPR</div><div class="metric">${(bFPR*100).toFixed(1)}%</div><div class="metric-sub">vs ${(wFPR*100).toFixed(1)}% for ${bestG}</div><span class="metric-badge badge-red">${ratio}× disparity</span></div>
+      <div class="card"><div class="card-title">Fair Detector — ${worstG} FPR</div><div class="metric">${(fFPR*100).toFixed(1)}%</div><div class="metric-sub">vs ${((fd[bestG]?.fpr||0)*100).toFixed(1)}% for ${bestG}</div><span class="metric-badge badge-amber">${fRatio}× disparity (improved)</span></div>
+      <div class="card"><div class="card-title">${redG} FPR Reduction</div><div class="metric">${((fd[redG]?.fpr||0)*100).toFixed(1)}%</div><div class="metric-sub">From ${((bd[redG]?.fpr||0)*100).toFixed(1)}% (biased)</div><span class="metric-badge badge-green">−${redPct}% FPR reduction</span></div>
+      <div class="card"><div class="card-title">Mitigation Method</div><div class="metric" style="font-size:18px">Threshold<br>Equalization</div><span class="metric-badge badge-blue">Per-group thresholds</span></div>`;
+  }
 
   new Chart(document.getElementById('chartFraudFPR'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[
-      { label:'Biased Detector', data:GROUPS.map(g=>(bd[g].fpr*100).toFixed(2)), backgroundColor:GROUPS.map(g=>COLORS[g]+'55'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 },
-      { label:'Fair Detector',   data:GROUPS.map(g=>(fd[g].fpr*100).toFixed(2)), backgroundColor:GROUPS.map(g=>COLORS[g]+'cc'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4, borderDash:[5,5] }
+    data:{ labels:fraudGroups, datasets:[
+      { label:'Biased Detector', data:fraudGroups.map(g=>((bd[g]?.fpr||0)*100).toFixed(2)), backgroundColor:fColors.map(c=>c+'55'), borderColor:fColors, borderWidth:1.5, borderRadius:4 },
+      { label:'Fair Detector',   data:fraudGroups.map(g=>((fd[g]?.fpr||0)*100).toFixed(2)), backgroundColor:fColors.map(c=>c+'cc'), borderColor:fColors, borderWidth:1.5, borderRadius:4 }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
   });
 
+  const tprVals = [...fraudGroups.map(g=>(bd[g]?.tpr||0)*100), ...fraudGroups.map(g=>(fd[g]?.tpr||0)*100)];
+  const tprMin = Math.max(0, Math.floor(Math.min(...tprVals)/10)*10 - 5);
+  const tprMax = Math.min(100, Math.ceil(Math.max(...tprVals)/10)*10 + 5);
   new Chart(document.getElementById('chartFraudTPR'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[
-      { label:'Biased Detector', data:GROUPS.map(g=>(bd[g].tpr*100).toFixed(2)), backgroundColor:GROUPS.map(g=>COLORS[g]+'55'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 },
-      { label:'Fair Detector',   data:GROUPS.map(g=>(fd[g].tpr*100).toFixed(2)), backgroundColor:GROUPS.map(g=>COLORS[g]+'cc'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 }
+    data:{ labels:fraudGroups, datasets:[
+      { label:'Biased Detector', data:fraudGroups.map(g=>((bd[g]?.tpr||0)*100).toFixed(2)), backgroundColor:fColors.map(c=>c+'55'), borderColor:fColors, borderWidth:1.5, borderRadius:4 },
+      { label:'Fair Detector',   data:fraudGroups.map(g=>((fd[g]?.tpr||0)*100).toFixed(2)), backgroundColor:fColors.map(c=>c+'cc'), borderColor:fColors, borderWidth:1.5, borderRadius:4 }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{min:30,max:50,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{min:tprMin,max:tprMax,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
   });
 
-  // Fraud table
   const tbody = document.querySelector('#fraudTable tbody');
-  GROUPS.forEach(g => {
-    const b = bd[g], f = fd[g];
-    const impr = ((b.fpr - f.fpr)/b.fpr*100).toFixed(1);
-    tbody.innerHTML += `<tr>
-      <td><strong>${g}</strong></td>
-      <td>${b.n.toLocaleString()}</td>
-      <td style="color:${b.fpr>0.1?'#dc2626':'#d97706'}">${(b.fpr*100).toFixed(1)}%</td>
-      <td style="color:${f.fpr>0.1?'#dc2626':'#16a34a'}">${(f.fpr*100).toFixed(1)}%</td>
-      <td><span class="metric-badge ${parseFloat(impr)>0?'badge-green':'badge-red'}">−${impr>0?impr:'0.0'}%</span></td>
-      <td>${(b.tpr*100).toFixed(1)}%</td>
-      <td>${(f.tpr*100).toFixed(1)}%</td>
-      <td><span class="metric-badge ${b.disparate_impact>1.2?'badge-red':b.disparate_impact>1.1?'badge-amber':'badge-green'}">${b.disparate_impact.toFixed(3)}</span></td>
-    </tr>`;
-  });
+  if (tbody) {
+    tbody.innerHTML = '';
+    fraudGroups.forEach(g => {
+      const b = bd[g]||{}, f = fd[g]||{};
+      const impr = b.fpr > 0 ? ((b.fpr - (f.fpr||0))/b.fpr*100).toFixed(1) : '0.0';
+      tbody.innerHTML += `<tr>
+        <td><strong>${g}</strong></td>
+        <td>${(b.n||0).toLocaleString()}</td>
+        <td style="color:${(b.fpr||0)>0.1?'#dc2626':'#d97706'}">${((b.fpr||0)*100).toFixed(1)}%</td>
+        <td style="color:${(f.fpr||0)>0.1?'#dc2626':'#16a34a'}">${((f.fpr||0)*100).toFixed(1)}%</td>
+        <td><span class="metric-badge ${parseFloat(impr)>0?'badge-green':'badge-red'}">−${parseFloat(impr)>0?impr:'0.0'}%</span></td>
+        <td>${((b.tpr||0)*100).toFixed(1)}%</td>
+        <td>${((f.tpr||0)*100).toFixed(1)}%</td>
+        <td><span class="metric-badge ${(b.disparate_impact||1)>1.2?'badge-red':(b.disparate_impact||1)>1.1?'badge-amber':'badge-green'}">${(b.disparate_impact||1).toFixed(3)}</span></td>
+      </tr>`;
+    });
+  }
 }
 
 // ─────────── MITIGATION ───────────
 function initMitigation() {
   const base = DATA.fairness.rf, mit = DATA.fairness.mitigated;
+  const mitGroups = Object.keys(base).filter(g => base[g] && mit[g]);
+  if (!mitGroups.length) return;
+  const mColors = mitGroups.map(g => COLORS[g]||'#aaa');
 
   new Chart(document.getElementById('chartMitDI'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[
-      { label:'Baseline RF', data:GROUPS.map(g=>base[g].disparate_impact), backgroundColor:GROUPS.map(g=>COLORS[g]+'55'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 },
-      { label:'Mitigated RF', data:GROUPS.map(g=>mit[g].disparate_impact), backgroundColor:GROUPS.map(g=>COLORS[g]+'cc'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 }
+    data:{ labels:mitGroups, datasets:[
+      { label:'Baseline RF',  data:mitGroups.map(g=>base[g].disparate_impact||1), backgroundColor:mColors.map(c=>c+'55'), borderColor:mColors, borderWidth:1.5, borderRadius:4 },
+      { label:'Mitigated RF', data:mitGroups.map(g=>mit[g].disparate_impact||1),  backgroundColor:mColors.map(c=>c+'cc'), borderColor:mColors, borderWidth:1.5, borderRadius:4 }
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{min:0.9,max:1.15,grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{min:0.7,grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
   });
 
   new Chart(document.getElementById('chartMitSPD'), {
     type:'bar',
-    data:{ labels:GROUPS, datasets:[
-      { label:'Baseline RF',  data:GROUPS.map(g=>base[g].statistical_parity_diff), backgroundColor:GROUPS.map(g=>COLORS[g]+'55'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 },
-      { label:'Mitigated RF', data:GROUPS.map(g=>mit[g].statistical_parity_diff),  backgroundColor:GROUPS.map(g=>COLORS[g]+'cc'), borderColor:GROUPS.map(g=>COLORS[g]), borderWidth:1.5, borderRadius:4 }
+    data:{ labels:mitGroups, datasets:[
+      { label:'Baseline RF',  data:mitGroups.map(g=>base[g].statistical_parity_diff||0), backgroundColor:mColors.map(c=>c+'55'), borderColor:mColors, borderWidth:1.5, borderRadius:4 },
+      { label:'Mitigated RF', data:mitGroups.map(g=>mit[g].statistical_parity_diff||0),  backgroundColor:mColors.map(c=>c+'cc'), borderColor:mColors, borderWidth:1.5, borderRadius:4 }
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}},scales:{y:{grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
   });
 
-  // DP table
-  const tbody = document.querySelector('#dpTable tbody');
-  GROUPS.forEach(g => {
-    const r = {
-  true_sr: DATA.fairness.rf[g].selection_rate,
-  dp_sr: DATA.dp["Random Forest"]?.[g] || 0
-               };
-    const noise = (r.dp_sr - r.true_sr).toFixed(4);
-    tbody.innerHTML += `<tr>
-      <td><strong>${g}</strong></td>
-      <td>${(r.true_sr*100).toFixed(2)}%</td>
-      <td>${(r.dp_sr*100).toFixed(2)}% <span class="dp-notice" style="font-size:10px;margin-left:4px">DP</span></td>
-      <td style="font-size:12px;color:var(--text2);">${parseFloat(noise)>=0?'+':''}${noise}</td>
-      <td><span class="metric-badge badge-purple">ε = 2.0</span></td>
-    </tr>`;
-  });
+  const dpTbody = document.querySelector('#dpTable tbody');
+  if (dpTbody) {
+    dpTbody.innerHTML = '';
+    mitGroups.forEach(g => {
+      const true_sr = base[g]?.selection_rate || 0;
+      const dp_sr   = DATA.dp?.["Random Forest"]?.[g] || 0;
+      const noise   = (dp_sr - true_sr).toFixed(4);
+      dpTbody.innerHTML += `<tr>
+        <td><strong>${g}</strong></td>
+        <td>${(true_sr*100).toFixed(2)}%</td>
+        <td>${(dp_sr*100).toFixed(2)}% <span class="dp-notice" style="font-size:10px;margin-left:4px">DP</span></td>
+        <td style="font-size:12px;color:var(--text2);">${parseFloat(noise)>=0?'+':''}${noise}</td>
+        <td><span class="metric-badge badge-purple">ε = 2.0</span></td>
+      </tr>`;
+    });
+  }
 }
 
 // ─────────── INIT ───────────
