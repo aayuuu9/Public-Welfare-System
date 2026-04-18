@@ -17,7 +17,7 @@
     --teal: #0d9488; --teal-l: #f0fdfa;
     --purple: #7c3aed; --purple-l: #f5f3ff;
     --radius: 10px; --radius-lg: 16px;
-    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 2px 12px rgba(0,0,0,0.05);
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 2px 12px rgba(170, 47, 47, 0.05);
     --shadow-lg: 0 4px 20px rgba(0,0,0,0.10);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -479,78 +479,46 @@
 
 <script>
 // ─────────── DATA ───────────
-const DATA = {
-  approval_by_race: { White: 0.478, Black: 0.239, Hispanic: 0.319, Asian: 0.443 },
-  income_by_race:   { White: 27644, Black: 25028, Hispanic: 25970, Asian: 29658 },
-  race_counts: { White: 4474, Hispanic: 1356, Black: 1121, Asian: 549 },
-  models: {
-    lr: { accuracy:0.992, precision:0.9957, recall:0.9914, f1:0.9936, auc:0.9998 },
-    rf: { accuracy:0.9973, precision:0.9974, recall:0.9983, f1:0.9979, auc:1.0 },
-    gb: { accuracy:1.0, precision:1.0, recall:1.0, f1:1.0, auc:1.0 },
-    mitigated: { accuracy:0.9989, precision:1.0, recall:0.9983, f1:0.9991, auc:1.0 }
-  },
-  fairness: {
-    rf: {
-      White:    { n:1108, selection_rate:0.6164, tpr:0.9971, fpr:0.007,  accuracy:0.9955, precision:0.9956, disparate_impact:1.0,    statistical_parity_diff:0.0 },
-      Black:    { n:283,  selection_rate:0.6678, tpr:1.0,    fpr:0.0,    accuracy:1.0,    precision:1.0,    disparate_impact:1.0834, statistical_parity_diff:0.0514 },
-      Hispanic: { n:343,  selection_rate:0.6181, tpr:1.0,    fpr:0.0,    accuracy:1.0,    precision:1.0,    disparate_impact:1.0028, statistical_parity_diff:0.0017 },
-      Asian:    { n:141,  selection_rate:0.5957, tpr:1.0,    fpr:0.0,    accuracy:1.0,    precision:1.0,    disparate_impact:0.9664, statistical_parity_diff:-0.0207 }
+// Inline results — no server needed (standalone HTML)
+const RESULTS_JSON = {"dataset_stats":{"info":"Dataset stats available only for synthetic dataset"},"model_performance":{"Logistic Regression":{"accuracy":0.7818,"precision":0.6147,"recall":0.2515,"f1":0.357,"auc":0.7767},"Random Forest":{"accuracy":0.8001,"precision":0.6044,"recall":0.4918,"f1":0.5423,"auc":0.815},"Gradient Boosting":{"accuracy":0.8344,"precision":0.7787,"recall":0.4362,"f1":0.5592,"auc":0.8576}},"fairness_race":{"Logistic Regression":{"White":{"selection_rate":0.0506,"tpr":0.0,"fpr":0.0571,"accuracy":0.8354,"precision":0.0,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.0973,"tpr":0.2727,"fpr":0.0366,"accuracy":0.786,"precision":0.72,"n":257,"disparate_impact":1.9229,"statistical_parity_diff":0.0467},"Hispanic":{"selection_rate":0.069,"tpr":0.2955,"fpr":0.0377,"accuracy":0.8814,"precision":0.52,"n":725,"disparate_impact":1.3636,"statistical_parity_diff":0.0184},"Asian":{"selection_rate":0.0635,"tpr":0.6667,"fpr":0.0333,"accuracy":0.9524,"precision":0.5,"n":63,"disparate_impact":1.2549,"statistical_parity_diff":0.0129}},"Random Forest":{"White":{"selection_rate":0.1519,"tpr":0.3333,"fpr":0.1286,"accuracy":0.8101,"precision":0.25,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1829,"tpr":0.4697,"fpr":0.0838,"accuracy":0.8016,"precision":0.6596,"n":257,"disparate_impact":1.2041,"statistical_parity_diff":0.031},"Hispanic":{"selection_rate":0.1434,"tpr":0.4545,"fpr":0.1005,"accuracy":0.8455,"precision":0.3846,"n":725,"disparate_impact":0.944,"statistical_parity_diff":-0.0085},"Asian":{"selection_rate":0.127,"tpr":0.6667,"fpr":0.1,"accuracy":0.8889,"precision":0.25,"n":63,"disparate_impact":0.8361,"statistical_parity_diff":-0.0249}},"Gradient Boosting":{"White":{"selection_rate":0.0633,"tpr":0.3333,"fpr":0.0286,"accuracy":0.8987,"precision":0.6,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1595,"tpr":0.4697,"fpr":0.0524,"accuracy":0.8249,"precision":0.7561,"n":257,"disparate_impact":2.5197,"statistical_parity_diff":0.0962},"Hispanic":{"selection_rate":0.0621,"tpr":0.3864,"fpr":0.0173,"accuracy":0.9103,"precision":0.7556,"n":725,"disparate_impact":0.981,"statistical_parity_diff":-0.0012},"Asian":{"selection_rate":0.0476,"tpr":0.6667,"fpr":0.0167,"accuracy":0.9683,"precision":0.6667,"n":63,"disparate_impact":0.752,"statistical_parity_diff":-0.0157}}},"fairness_gender":{"Logistic Regression":{"Male":{"selection_rate":0.0626,"tpr":0.2177,"fpr":0.0435,"accuracy":0.8755,"precision":0.381,"n":2683,"disparate_impact":0.0626,"statistical_parity_diff":-0.9374},"Female":{"selection_rate":0.1162,"tpr":0.2575,"fpr":0.0541,"accuracy":0.7358,"precision":0.6767,"n":5458,"disparate_impact":0.1162,"statistical_parity_diff":-0.8838}},"Random Forest":{"Male":{"selection_rate":0.1372,"tpr":0.4524,"fpr":0.0984,"accuracy":0.8524,"precision":0.3614,"n":2683,"disparate_impact":0.1372,"statistical_parity_diff":-0.8628},"Female":{"selection_rate":0.2248,"tpr":0.4988,"fpr":0.1044,"accuracy":0.7745,"precision":0.6773,"n":5458,"disparate_impact":0.2248,"statistical_parity_diff":-0.7752}},"Gradient Boosting":{"Male":{"selection_rate":0.0731,"tpr":0.4048,"fpr":0.0322,"accuracy":0.9061,"precision":0.6071,"n":2683,"disparate_impact":0.0731,"statistical_parity_diff":-0.9269},"Female":{"selection_rate":0.1653,"tpr":0.4418,"fpr":0.0438,"accuracy":0.7992,"precision":0.816,"n":5458,"disparate_impact":0.1653,"statistical_parity_diff":-0.8347}}},"mitigated_performance":{"accuracy":0.7986,"precision":0.601,"recall":0.4857,"f1":0.5372,"auc":0.8143},"mitigated_fairness_race":{"White":{"selection_rate":0.1266,"tpr":0.3333,"fpr":0.1,"accuracy":0.8354,"precision":0.3,"n":79,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1751,"tpr":0.4545,"fpr":0.0785,"accuracy":0.8016,"precision":0.6667,"n":257,"disparate_impact":1.3831,"statistical_parity_diff":0.0485},"Hispanic":{"selection_rate":0.1366,"tpr":0.4659,"fpr":0.0911,"accuracy":0.8552,"precision":0.4141,"n":725,"disparate_impact":1.079,"statistical_parity_diff":0.01},"Asian":{"selection_rate":0.127,"tpr":0.6667,"fpr":0.1,"accuracy":0.8889,"precision":0.25,"n":63,"disparate_impact":1.0032,"statistical_parity_diff":0.0004}},"feature_importance":{"age":0.02657,"fnlwgt":-0.00054,"education_num":0.03659,"capital_gain":0.0438,"capital_loss":0.01752,"hours_per_week":0.00828},"feature_importance_by_race":{"White":{"age":0.00506,"fnlwgt":-0.0,"education_num":-0.0,"capital_gain":0.00506,"capital_loss":0.01519,"hours_per_week":-0.01013},"Black":{"age":0.04125,"fnlwgt":0.01946,"education_num":0.03735,"capital_gain":0.03346,"capital_loss":0.00467,"hours_per_week":0.01634},"Hispanic":{"age":-0.0011,"fnlwgt":-0.02069,"education_num":0.00055,"capital_gain":0.03338,"capital_loss":0.01766,"hours_per_week":-0.01434},"Asian":{"age":-0.06032,"fnlwgt":-0.04762,"education_num":-0.04444,"capital_gain":0.06349,"capital_loss":-0.00952,"hours_per_week":-0.02857}},"dp_selection_rates":{"Logistic Regression":{"White":0,"Black":0,"Hispanic":0,"Asian":0},"Random Forest":{"White":0.0074,"Black":0.0384,"Hispanic":0,"Asian":0},"Gradient Boosting":{"White":0,"Black":0.015,"Hispanic":0,"Asian":0}},"fraud_case_study":{"biased":{"White":{"selection_rate":0.1259,"tpr":0.4103,"fpr":0.0527,"accuracy":0.8373,"precision":0.6676,"n":2938,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1879,"tpr":0.4466,"fpr":0.151,"accuracy":0.7988,"precision":0.2968,"n":825,"disparate_impact":1.4925,"statistical_parity_diff":0.062},"Hispanic":{"selection_rate":0.1693,"tpr":0.4406,"fpr":0.1167,"accuracy":0.8114,"precision":0.4228,"n":880,"disparate_impact":1.3447,"statistical_parity_diff":0.0434},"Asian":{"selection_rate":0.1261,"tpr":0.4096,"fpr":0.0401,"accuracy":0.8319,"precision":0.7556,"n":357,"disparate_impact":1.0016,"statistical_parity_diff":0.0002}},"fair":{"White":{"selection_rate":0.1501,"tpr":0.5581,"fpr":0.0449,"accuracy":0.8737,"precision":0.7619,"n":2938,"disparate_impact":1.0,"statistical_parity_diff":0.0},"Black":{"selection_rate":0.1503,"tpr":0.6408,"fpr":0.0803,"accuracy":0.8848,"precision":0.5323,"n":825,"disparate_impact":1.0013,"statistical_parity_diff":0.0002},"Hispanic":{"selection_rate":0.15,"tpr":0.6434,"fpr":0.0543,"accuracy":0.8966,"precision":0.697,"n":880,"disparate_impact":0.9993,"statistical_parity_diff":-0.0001},"Asian":{"selection_rate":0.1513,"tpr":0.4458,"fpr":0.062,"accuracy":0.8235,"precision":0.6852,"n":357,"disparate_impact":1.008,"statistical_parity_diff":0.0012}}}};
+
+let DATA = {};
+async function loadData() {
+  const apiData = RESULTS_JSON;
+
+  // Derived dataset_stats (not in results.json — computed from synthesis.py parameters)
+  // Race distribution: White 60%, Black 15%, Hispanic 18%, Asian 7% of 7500
+  const TOTAL = 7500;
+  apiData.dataset_stats.race_distribution = { White: 4500, Black: 1125, Hispanic: 1350, Asian: 525 };
+  // Historical approval rates from the synthesis bias: White ~47.8%, Black ~23.9%, Hispanic ~32%, Asian ~44%
+  apiData.dataset_stats.approval_by_race  = { White: 0.478, Black: 0.239, Hispanic: 0.320, Asian: 0.440 };
+  // Mean income: base 28000, Black -3000, Hispanic -2000, Asian +0
+  apiData.dataset_stats.income_by_race    = { White: 28000, Black: 25000, Hispanic: 26000, Asian: 28000 };
+
+  DATA = {
+    approval_by_race: apiData.dataset_stats.approval_by_race,
+    income_by_race:   apiData.dataset_stats.income_by_race,
+    race_counts:      apiData.dataset_stats.race_distribution,
+    fairness: {
+      rf:        apiData.fairness_race["Random Forest"],
+      lr:        apiData.fairness_race["Logistic Regression"],
+      gb:        apiData.fairness_race["Gradient Boosting"],
+      mitigated: apiData.mitigated_fairness_race
     },
-    lr: {
-      White:    { n:1108, selection_rate:0.610, tpr:0.996, fpr:0.008, accuracy:0.994, precision:0.993, disparate_impact:1.0,    statistical_parity_diff:0.0 },
-      Black:    { n:283,  selection_rate:0.655, tpr:0.999, fpr:0.01,  accuracy:0.996, precision:0.997, disparate_impact:1.073, statistical_parity_diff:0.045 },
-      Hispanic: { n:343,  selection_rate:0.611, tpr:0.998, fpr:0.005, accuracy:0.997, precision:0.998, disparate_impact:1.002, statistical_parity_diff:0.001 },
-      Asian:    { n:141,  selection_rate:0.590, tpr:0.997, fpr:0.005, accuracy:0.996, precision:0.997, disparate_impact:0.967, statistical_parity_diff:-0.020 }
+    models: {
+      rf: apiData.model_performance["Random Forest"],
+      lr: apiData.model_performance["Logistic Regression"],
+      gb: apiData.model_performance["Gradient Boosting"]
     },
-    gb: {
-      White:    { n:1108, selection_rate:0.616, tpr:1.0, fpr:0.0, accuracy:1.0, precision:1.0, disparate_impact:1.0,   statistical_parity_diff:0.0 },
-      Black:    { n:283,  selection_rate:0.668, tpr:1.0, fpr:0.0, accuracy:1.0, precision:1.0, disparate_impact:1.083, statistical_parity_diff:0.052 },
-      Hispanic: { n:343,  selection_rate:0.618, tpr:1.0, fpr:0.0, accuracy:1.0, precision:1.0, disparate_impact:1.003, statistical_parity_diff:0.002 },
-      Asian:    { n:141,  selection_rate:0.596, tpr:1.0, fpr:0.0, accuracy:1.0, precision:1.0, disparate_impact:0.966, statistical_parity_diff:-0.020 }
-    },
-    mitigated: {
-      White:    { n:1108, selection_rate:0.614, tpr:0.9971, fpr:0.007, accuracy:0.9955, precision:1.0, disparate_impact:1.0,   statistical_parity_diff:0.0 },
-      Black:    { n:283,  selection_rate:0.668, tpr:1.0,    fpr:0.0,   accuracy:1.0,    precision:1.0, disparate_impact:1.088, statistical_parity_diff:0.054 },
-      Hispanic: { n:343,  selection_rate:0.618, tpr:1.0,    fpr:0.0,   accuracy:1.0,    precision:1.0, disparate_impact:1.007, statistical_parity_diff:0.004 },
-      Asian:    { n:141,  selection_rate:0.596, tpr:1.0,    fpr:0.0,   accuracy:1.0,    precision:1.0, disparate_impact:0.971, statistical_parity_diff:-0.017 }
+    features:         apiData.feature_importance,
+    features_by_race: apiData.feature_importance_by_race,
+    fraud:            apiData.fraud_case_study,
+    dp:               apiData.dp_selection_rates,
+    gender: {
+      rf: apiData.fairness_gender["Random Forest"]
     }
-  },
-  gender: {
-    rf: {
-      Male:   { n:912, selection_rate:0.613, tpr:0.996, fpr:0.008, accuracy:0.994 },
-      Female: { n:963, selection_rate:0.642, tpr:0.999, fpr:0.008, accuracy:0.995 }
-    }
-  },
-  features: { age:-0.00069, income:0.34565, hh_size:0.19744, employed:0.01163, disability:0.09435, prior_benefit:-0.00043 },
-  features_by_race: {
-    White:    { age:0.00012, income:0.356, hh_size:0.192, employed:0.011, disability:0.088, prior_benefit:-0.001 },
-    Black:    { age:-0.001,  income:0.289, hh_size:0.221, employed:0.018, disability:0.112, prior_benefit:0.002 },
-    Hispanic: { age:0.001,   income:0.312, hh_size:0.204, employed:0.014, disability:0.098, prior_benefit:-0.002 },
-    Asian:    { age:-0.002,  income:0.378, hh_size:0.178, employed:0.008, disability:0.075, prior_benefit:-0.003 }
-  },
-  fraud: {
-    biased: {
-      White:    { n:2938, fpr:0.0527, tpr:0.4103, disparate_impact:1.0 },
-      Black:    { n:735,  fpr:0.1513, tpr:0.4466, disparate_impact:1.493 },
-      Hispanic: { n:901,  fpr:0.1168, tpr:0.4521, disparate_impact:1.307 },
-      Asian:    { n:360,  fpr:0.0396, tpr:0.3864, disparate_impact:0.921 }
-    },
-    fair: {
-      White:    { n:2938, fpr:0.0454, tpr:0.3827 },
-      Black:    { n:735,  fpr:0.0795, tpr:0.3814 },
-      Hispanic: { n:901,  fpr:0.0539, tpr:0.3918 },
-      Asian:    { n:360,  fpr:0.0619, tpr:0.3920 }
-    }
-  },
-  dp: {
-    rf: {
-      White:    { true_sr:0.6164, dp_sr:0.6218 },
-      Black:    { true_sr:0.6678, dp_sr:0.6541 },
-      Hispanic: { true_sr:0.6181, dp_sr:0.6302 },
-      Asian:    { true_sr:0.5957, dp_sr:0.5879 }
-    }
-  }
-};
+  };
+}
 
 const COLORS = { White:'#3b82f6', Black:'#f59e0b', Hispanic:'#10b981', Asian:'#8b5cf6' };
 const GROUPS = ['White','Black','Hispanic','Asian'];
@@ -565,7 +533,11 @@ function showSection(id) {
 
 // ─────────── OVERVIEW CHARTS ───────────
 function initOverview() {
-  const groups = Object.keys(DATA.approval_by_race);
+  if (!DATA.approval_by_race) {
+  console.error("approval_by_race missing", DATA);
+  return;
+}
+const groups = Object.keys(DATA.approval_by_race);
   const vals   = Object.values(DATA.approval_by_race);
   const income = Object.values(DATA.income_by_race);
   const colors = groups.map(g => COLORS[g]);
@@ -588,7 +560,9 @@ function initOverview() {
       }
     }
   });
+  
   const approvalLeg = document.getElementById('approvalLegend');
+  approvalLeg.innerHTML = '';
   groups.forEach((g,i) => {
     approvalLeg.innerHTML += `<div class="legend-item"><div class="legend-swatch" style="background:${colors[i]}"></div>${g}: ${(vals[i]*100).toFixed(1)}%</div>`;
   });
@@ -655,7 +629,7 @@ function renderFairness() {
     }]},
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false},annotation:{annotations:{line1:{type:'line',yMin:50,yMax:50,borderColor:'#ef4444',borderWidth:1.5,borderDash:[5,5],label:{content:'80% rule threshold',display:true,position:'end',font:{size:10}}}}}},
+      plugins:{legend:{display:false}},
       scales:{y:{min:50,max:75,ticks:{callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}
     }
   });
@@ -694,7 +668,6 @@ function renderFairness() {
     </tr>`;
   });
 
-  // Gender
   const gd = DATA.gender.rf;
   ['Male','Female'].forEach(g => {
     const r = gd[g];
@@ -861,10 +834,12 @@ function initMitigation() {
   });
 
   // DP table
-  const dpData = DATA.dp.rf;
   const tbody = document.querySelector('#dpTable tbody');
   GROUPS.forEach(g => {
-    const r = dpData[g];
+    const r = {
+  true_sr: DATA.fairness.rf[g].selection_rate,
+  dp_sr: DATA.dp["Random Forest"]?.[g] || 0
+               };
     const noise = (r.dp_sr - r.true_sr).toFixed(4);
     tbody.innerHTML += `<tr>
       <td><strong>${g}</strong></td>
@@ -877,12 +852,17 @@ function initMitigation() {
 }
 
 // ─────────── INIT ───────────
-initOverview();
-renderFairness();
-initModels();
-initExplainability();
-initCaseStudy();
-initMitigation();
+async function initAll() {
+  await loadData();
+  initOverview();
+  renderFairness();
+  initModels();
+  initExplainability();
+  initCaseStudy();
+  initMitigation();
+}
+
+initAll();
 </script>
 </body>
 </html>

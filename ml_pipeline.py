@@ -14,98 +14,147 @@ import json, random
 random.seed(42)
 np.random.seed(42)
 
+
+import numpy as np
+
+def compute_reweigh_weights(race_labels, y_labels):
+    """Reweighing algorithm (Kamiran & Calders 2012)."""
+    n = len(race_labels)
+    weights = np.ones(n)
+
+    for r in np.unique(race_labels):
+        for y in [0, 1]:
+            mask = (race_labels == r) & (y_labels == y)
+
+            p_r  = (race_labels == r).mean()
+            p_y  = (y_labels == y).mean()
+            p_ry = mask.mean()
+
+            if p_ry > 0:
+                weights[mask] = (p_r * p_y) / p_ry
+
+    return weights
+
 # ─────────────────────────────────────────────
-# 1. SYNTHETIC DATASET GENERATION
+# 1. DATASET 
 # ─────────────────────────────────────────────
-def generate_welfare_dataset(n=3000, program="SNAP"):
-    """
-    Simulates a realistic welfare eligibility / fraud-flag dataset with
-    known demographic disparities reflecting documented historical bias.
-    """
-    race      = np.random.choice([0,1,2,3], n, p=[0.60,0.15,0.18,0.07])  # 0=White,1=Black,2=Hispanic,3=Asian
-    gender    = np.random.choice([0,1], n, p=[0.48,0.52])
-    age       = np.random.randint(18, 65, n)
-    income    = np.random.normal(28000, 12000, n).clip(0)
-    income   -= (race==1)*3000 + (race==2)*2000   # historical income gap
-    hh_size   = np.random.poisson(2.8, n).clip(1,8).astype(int)
-    employed  = (income > 20000).astype(int)
-    disability= np.random.binomial(1, 0.12, n)
-    prior_ben = np.random.binomial(1, 0.35, n)
+from data_loader import load_real_data, load_synthetic_data
 
-    # True eligibility (income-based rule)
-    fpl_threshold = 16000 + hh_size * 4800
-    truly_eligible = ((income < fpl_threshold) | (disability==1)).astype(int)
+USE_REAL_DATA = True
 
-    # Biased historical approval: penalises minority groups
-    bias_noise = (race==1)*0.12 + (race==2)*0.08 + (gender==1)*0.04
-    noise      = np.random.normal(0, 0.1, n)
-    approval_prob = (0.60 * truly_eligible - bias_noise + noise).clip(0,1)
-    historical_approval = (approval_prob > 0.5).astype(int)
+if USE_REAL_DATA:
+    df = load_real_data()
+else:
+    df = load_synthetic_data()
 
-    df = pd.DataFrame({
-        "race": race, "gender": gender, "age": age,
-        "income": income.astype(int), "hh_size": hh_size,
-        "employed": employed, "disability": disability,
-        "prior_benefit": prior_ben,
-        "truly_eligible": truly_eligible,
-        "historical_approved": historical_approval
-    })
-    return df
-
-# Generate three program datasets
-snap   = generate_welfare_dataset(3000, "SNAP")
-medi   = generate_welfare_dataset(2500, "Medicaid")
-unemp  = generate_welfare_dataset(2000, "Unemployment")
-all_df = pd.concat([snap, medi, unemp], ignore_index=True)
-
-print(f"Dataset sizes: SNAP={len(snap)}, Medicaid={len(medi)}, Unemployment={len(unemp)}")
-print(all_df.describe().to_string())
-
+print(df.head())
 # ─────────────────────────────────────────────
 # 2. PREPROCESSING
 # ─────────────────────────────────────────────
-FEATURES = ["age","income","hh_size","employed","disability","prior_benefit"]
-TARGET    = "truly_eligible"
+from data_loader import load_real_data, load_synthetic_data
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 
-X = all_df[FEATURES].values
-y = all_df[TARGET].values
-race   = all_df["race"].values
-gender = all_df["gender"].values
+# 🔥 Toggle dataset
+USE_REAL_DATA = True
 
+# =========================
+# 🔹 LOAD DATA
+# =========================
+if USE_REAL_DATA:
+    df = load_real_data()
+else:
+    df = load_synthetic_data()
+
+# =========================
+# 🔹 CLEAN DATA
+# =========================
+df = df.fillna("Unknown")
+
+# =========================
+# 🔹 HANDLE TARGET (VERY IMPORTANT)
+# =========================
+if USE_REAL_DATA:
+    # Clean income column
+    df["income"] = df["income"].astype(str).str.strip()
+    df["income"] = df["income"].replace({
+        "<=50K.": "<=50K",
+        ">50K.": ">50K"
+    })
+
+    # Keep only valid rows
+    df = df[df["income"].isin(["<=50K", ">50K"])]
+
+    # Convert to binary
+    df["income"] = df["income"].map({
+        "<=50K": 0,
+        ">50K": 1
+    })
+
+    FEATURES = [
+        "age", "fnlwgt", "education_num",
+        "capital_gain", "capital_loss", "hours_per_week"
+    ]
+    TARGET = "income"
+
+else:
+    FEATURES = [
+        "age","income","hh_size",
+        "employed","disability","prior_benefit"
+    ]
+    TARGET = "truly_eligible"
+
+# =========================
+# 🔹 ENCODE CATEGORICAL
+# =========================
+df_encoded = df.copy()
+
+for col in df_encoded.select_dtypes(include="object").columns:
+    le = LabelEncoder()
+    df_encoded[col] = le.fit_transform(df_encoded[col])
+
+# =========================
+# 🔹 SPLIT FEATURES / TARGET
+# =========================
+X = df_encoded[FEATURES]
+y = df_encoded[TARGET]
+
+# =========================
+# 🔹 SAVE SENSITIVE ATTRIBUTES (for fairness)
+# =========================
+race = df_encoded["race"]
+
+if USE_REAL_DATA:
+    gender = df_encoded["sex"]
+else:
+    gender = df_encoded["gender"]
+
+# =========================
+# 🔹 SCALE FEATURES
+# =========================
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
+# =========================
+# 🔹 TRAIN-TEST SPLIT (FIXED)
+# =========================
 X_tr, X_te, y_tr, y_te, race_tr, race_te, gen_tr, gen_te = train_test_split(
-    X_scaled, y, race, gender, test_size=0.25, random_state=42, stratify=y
+    X_scaled,
+    y,
+    race,
+    gender,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
 )
 
-# ─────────────────────────────────────────────
-# 3. MODEL TRAINING
-# ─────────────────────────────────────────────
-models = {
-    "Logistic Regression": LogisticRegression(max_iter=500, random_state=42),
-    "Random Forest":       RandomForestClassifier(n_estimators=100, random_state=42),
-    "Gradient Boosting":   GradientBoostingClassifier(n_estimators=100, random_state=42)
-}
-results = {}
-for name, mdl in models.items():
-    mdl.fit(X_tr, y_tr)
-    y_pred = mdl.predict(X_te)
-    y_prob = mdl.predict_proba(X_te)[:,1]
-    results[name] = {
-        "accuracy":  round(accuracy_score(y_te, y_pred), 4),
-        "precision": round(precision_score(y_te, y_pred), 4),
-        "recall":    round(recall_score(y_te, y_pred), 4),
-        "f1":        round(f1_score(y_te, y_pred), 4),
-        "auc":       round(roc_auc_score(y_te, y_prob), 4),
-        "y_pred":    y_pred.tolist(),
-        "y_prob":    y_prob.tolist()
-    }
-    print(f"\n{name}: acc={results[name]['accuracy']} f1={results[name]['f1']} auc={results[name]['auc']}")
+# =========================
+# 🔹 DEBUG PRINTS
+# =========================
+print("Preprocessing done ✅")
+print("Classes distribution:\n", y.value_counts())
+print("Train size:", len(X_tr))
 
-# ─────────────────────────────────────────────
-# 4. FAIRNESS METRICS (AIF360-style formulas)
-# ─────────────────────────────────────────────
 RACE_LABELS = {0:"White",1:"Black",2:"Hispanic",3:"Asian"}
 def fairness_metrics(y_true, y_pred, sensitive, labels):
     out = {}
@@ -132,155 +181,373 @@ def fairness_metrics(y_true, y_pred, sensitive, labels):
 
 fairness_by_model_race   = {}
 fairness_by_model_gender = {}
-for name in results:
-    yp = np.array(results[name]["y_pred"])
-    fairness_by_model_race[name]   = fairness_metrics(y_te, yp, race_te,   RACE_LABELS)
-    fairness_by_model_gender[name] = fairness_metrics(y_te, yp, gen_te,    {0:"Male",1:"Female"})
+
+# ─────────────────────────────────────────────
+# 3. MODEL TRAINING
+# ─────────────────────────────────────────────
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=500, random_state=42),
+    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+    "Gradient Boosting": GradientBoostingClassifier(n_estimators=100, random_state=42)
+}
+
+results = {}
+
+for name, mdl in models.items():
+    mdl.fit(X_tr, y_tr)
+
+    y_pred = mdl.predict(X_te)
+
+    # 🔥 Safe probability handling
+    if hasattr(mdl, "predict_proba"):
+        y_prob = mdl.predict_proba(X_te)[:, 1]
+    else:
+        y_prob = y_pred  # fallback
+
+    results[name] = {
+        "accuracy": round(accuracy_score(y_te, y_pred), 4),
+        "precision": round(precision_score(y_te, y_pred, zero_division=0), 4),
+        "recall": round(recall_score(y_te, y_pred, zero_division=0), 4),
+        "f1": round(f1_score(y_te, y_pred, zero_division=0), 4),
+        "auc": round(roc_auc_score(y_te, y_prob), 4),
+    }
+    
+    fairness_by_model_race[name]   = fairness_metrics(y_te, y_pred, race_te, RACE_LABELS)
+    
+    GENDER_LABELS = {0: "Male", 1: "Female"}
+    fairness_by_model_gender[name] = fairness_metrics(y_te, y_pred, gen_te, GENDER_LABELS)
+
+    print(f"\n{name}:")
+    print(f"Accuracy: {results[name]['accuracy']}")
+    print(f"F1 Score: {results[name]['f1']}")
+    print(f"AUC: {results[name]['auc']}")
+
+# ─────────────────────────────────────────────
+# 4. FAIRNESS METRICS (AIF360-style formulas)
+# ─────────────────────────────────────────────
+
+
 
 # ─────────────────────────────────────────────
 # 5. BIAS MITIGATION (Reweighing + Threshold Calibration)
 # ─────────────────────────────────────────────
-# Reweighing: compute sample weights that equalise selection rates across groups
-def compute_reweigh_weights(race_labels, y_labels):
-    """Reweighing algorithm (Kamiran & Calders 2012)."""
-    n = len(race_labels)
-    weights = np.ones(n)
-    for r in np.unique(race_labels):
-        for y in [0,1]:
-            mask = (race_labels==r) & (y_labels==y)
-            p_r  = (race_labels==r).mean()
-            p_y  = (y_labels==y).mean()
-            p_ry = mask.mean()
-            if p_ry > 0:
-                weights[mask] = (p_r * p_y) / p_ry
-    return weights
+race_tr_np = np.asarray(race_tr)
+y_tr_np    = np.asarray(y_tr)
 
-weights_tr = compute_reweigh_weights(race_tr, y_tr)
+weights_tr = compute_reweigh_weights(race_tr_np, y_tr_np)
+
 rf_mit = RandomForestClassifier(n_estimators=100, random_state=42)
 rf_mit.fit(X_tr, y_tr, sample_weight=weights_tr)
-yp_mit = rf_mit.predict(X_te)
-ypr_mit= rf_mit.predict_proba(X_te)[:,1]
+
+yp_mit  = rf_mit.predict(X_te)
+ypr_mit = rf_mit.predict_proba(X_te)[:,1]
 
 mitigated_overall = {
     "accuracy":  round(accuracy_score(y_te, yp_mit), 4),
-    "precision": round(precision_score(y_te, yp_mit), 4),
-    "recall":    round(recall_score(y_te, yp_mit), 4),
-    "f1":        round(f1_score(y_te, yp_mit), 4),
+    "precision": round(precision_score(y_te, yp_mit, zero_division=0), 4),
+    "recall":    round(recall_score(y_te, yp_mit, zero_division=0), 4),
+    "f1":        round(f1_score(y_te, yp_mit, zero_division=0), 4),
     "auc":       round(roc_auc_score(y_te, ypr_mit), 4),
 }
+
 mitigated_fairness = fairness_metrics(y_te, yp_mit, race_te, RACE_LABELS)
+
 print("\nMitigated RF:", mitigated_overall)
+print("\nMitigated Fairness:", mitigated_fairness)
 
 # ─────────────────────────────────────────────
-# 6. SHAP-STYLE FEATURE IMPORTANCE (permutation-based approximation)
-# ─────────────────────────────────────────────
 from sklearn.inspection import permutation_importance
+import numpy as np
+
+# 🔥 Ensure model exists
 rf_base = models["Random Forest"]
-perm = permutation_importance(rf_base, X_te, y_te, n_repeats=10, random_state=42)
+
+# =========================
+# 🔹 GLOBAL FEATURE IMPORTANCE
+# =========================
+perm = permutation_importance(
+    rf_base,
+    X_te,
+    y_te,
+    n_repeats=10,
+    random_state=42
+)
+
 shap_approx = {
     FEATURES[i]: round(float(perm.importances_mean[i]), 5)
     for i in range(len(FEATURES))
 }
-print("\nFeature importance (permutation):", shap_approx)
 
-# Group-conditional feature importances
+print("\nGlobal Feature Importance:")
+print(shap_approx)
+
+
+# =========================
+# 🔹 GROUP-WISE IMPORTANCE (RACE)
+# =========================
 shap_by_race = {}
+
+race_te_np = np.asarray(race_te)
+
 for g, lbl in RACE_LABELS.items():
-    mask = race_te == g
-    if mask.sum() < 30: continue
-    pi = permutation_importance(rf_base, X_te[mask], y_te[mask], n_repeats=5, random_state=42)
-    shap_by_race[lbl] = {FEATURES[i]: round(float(pi.importances_mean[i]),5) for i in range(len(FEATURES))}
+    mask = race_te_np == g
+
+    if mask.sum() < 30:
+        continue
+
+    pi = permutation_importance(
+        rf_base,
+        X_te[mask],
+        y_te[mask],
+        n_repeats=5,
+        random_state=42
+    )
+
+    shap_by_race[lbl] = {
+        FEATURES[i]: round(float(pi.importances_mean[i]), 5)
+        for i in range(len(FEATURES))
+    }
+
+print("\nFeature Importance by Race:")
+print(shap_by_race)
 
 # ─────────────────────────────────────────────
 # 7. DIFFERENTIAL PRIVACY NOISE (Laplace mechanism)
 # ─────────────────────────────────────────────
-def dp_aggregate(values, sensitivity=1.0, epsilon=1.0):
+import numpy as np
+
+def dp_aggregate(values, sensitivity=1.0, epsilon=1.0, seed=42):
+    np.random.seed(seed)  # 🔥 reproducibility
     noise = np.random.laplace(0, sensitivity/epsilon, len(values))
-    return [round(float(v+n), 4) for v,n in zip(values, noise)]
 
-# Add DP noise to selection rates for public reporting
-dp_selection_rates = {}
-for name in fairness_by_model_race:
-    dp_selection_rates[name] = {
-        lbl: dp_aggregate([fairness_by_model_race[name][lbl]["selection_rate"]], epsilon=2.0)[0]
-        for lbl in fairness_by_model_race[name]
-    }
+    noisy = []
+    for v, n in zip(values, noise):
+        val = v + n
 
+        # 🔥 clamp between 0 and 1 (important for probabilities)
+        val = max(0, min(1, val))
+
+        noisy.append(round(float(val), 4))
+
+    return noisy
 # ─────────────────────────────────────────────
 # 8. CASE STUDY: WELFARE FRAUD DETECTION SIMULATION
 # ─────────────────────────────────────────────
 # Simulate a fraud-flag dataset (high-stakes: false positives harm legitimate beneficiaries)
-np.random.seed(99)
-n_fraud = 5000
-race_f   = np.random.choice([0,1,2,3], n_fraud, p=[0.60,0.15,0.18,0.07])
-income_f = np.random.normal(24000, 10000, n_fraud).clip(0)
-income_f-= (race_f==1)*3000 + (race_f==2)*2000
-actual_fraud = (income_f > 32000).astype(int)  # true fraud: over-income
-# Biased flag: over-flags minorities
-biased_flag = np.zeros(n_fraud, dtype=int)
-for i in range(n_fraud):
-    base = 0.4 if actual_fraud[i] else 0.05
-    bias = 0.10 if race_f[i]==1 else (0.07 if race_f[i]==2 else 0)
-    biased_flag[i] = int(np.random.random() < base + bias)
+def run_fraud_case_study():
+    import numpy as np
 
-fraud_metrics_biased   = fairness_metrics(actual_fraud, biased_flag, race_f, RACE_LABELS)
+    np.random.seed(99)
+    n_fraud = 5000
 
-# Fair fraud detector (threshold-equalized)
-fraud_score = np.random.beta(2, 5, n_fraud)
-fraud_score[actual_fraud==1] += 0.35
-# Equalize thresholds per group
-fair_flag = np.zeros(n_fraud, dtype=int)
-for g in range(4):
-    mask = race_f == g
-    if mask.sum() < 10: continue
-    thr = np.percentile(fraud_score[mask], 85)  # top 15% per group
-    fair_flag[mask] = (fraud_score[mask] > thr).astype(int)
+    race_f = np.random.choice([0,1,2,3], n_fraud, p=[0.60,0.15,0.18,0.07])
+    income_f = np.random.normal(24000, 10000, n_fraud).clip(0)
+    income_f -= (race_f==1)*3000 + (race_f==2)*2000
 
-fraud_metrics_fair = fairness_metrics(actual_fraud, fair_flag, race_f, RACE_LABELS)
+    actual_fraud = (income_f > 32000).astype(int)
+
+    biased_flag = np.zeros(n_fraud, dtype=int)
+    for i in range(n_fraud):
+        base = 0.4 if actual_fraud[i] else 0.05
+        bias = 0.10 if race_f[i]==1 else (0.07 if race_f[i]==2 else 0)
+        biased_flag[i] = int(np.random.random() < base + bias)
+
+    fraud_metrics_biased = fairness_metrics(actual_fraud, biased_flag, race_f, RACE_LABELS)
+
+    fraud_score = np.random.beta(2, 5, n_fraud)
+    fraud_score[actual_fraud==1] += 0.35
+
+    fair_flag = np.zeros(n_fraud, dtype=int)
+    for g in range(4):
+        mask = race_f == g
+        if mask.sum() < 10:
+            continue
+        thr = np.percentile(fraud_score[mask], 85)
+        fair_flag[mask] = (fraud_score[mask] > thr).astype(int)
+
+    fraud_metrics_fair = fairness_metrics(actual_fraud, fair_flag, race_f, RACE_LABELS)
+
+    return {
+        "biased": fraud_metrics_biased,
+        "fair": fraud_metrics_fair
+    }
+
+    # 🔴 Biased system
+    biased_flag = np.zeros(n_fraud, dtype=int)
+    for i in range(n_fraud):
+        base = 0.4 if actual_fraud[i] else 0.05
+        bias = 0.10 if race_f[i]==1 else (0.07 if race_f[i]==2 else 0)
+        biased_flag[i] = int(np.random.random() < base + bias)
+
+    fraud_metrics_biased = fairness_metrics(
+        actual_fraud, biased_flag, race_f, RACE_LABELS
+    )
+
+    # 🟢 Fair system (group thresholding)
+    fraud_score = np.random.beta(2, 5, n_fraud)
+    fraud_score[actual_fraud==1] += 0.35
+
+    fair_flag = np.zeros(n_fraud, dtype=int)
+    for g in range(4):
+        mask = race_f == g
+        if mask.sum() < 10:
+            continue
+        thr = np.percentile(fraud_score[mask], 85)
+        fair_flag[mask] = (fraud_score[mask] > thr).astype(int)
+
+    fraud_metrics_fair = fairness_metrics(
+        actual_fraud, fair_flag, race_f, RACE_LABELS
+    )
+
+    return {
+        "biased": fraud_metrics_biased,
+        "fair": fraud_metrics_fair
+    }
 
 # ─────────────────────────────────────────────
 # 9. COMPILE ALL RESULTS TO JSON
 # ─────────────────────────────────────────────
-payload = {
-    "dataset_stats": {
-        "total_records": len(all_df),
+import json
+import numpy as np
+
+# =========================
+# 🔹 DP FUNCTION (IMPROVED)
+# =========================
+def dp_aggregate(values, sensitivity=1.0, epsilon=1.0, seed=42):
+    np.random.seed(seed)
+    noise = np.random.laplace(0, sensitivity/epsilon, len(values))
+
+    return [
+        round(max(0, min(1, float(v + n))), 4)
+        for v, n in zip(values, noise)
+    ]
+
+
+# =========================
+# 🔹 SAFE DP GENERATION
+# =========================
+dp_selection_rates = {}
+
+if "fairness_by_model_race" in globals():
+    for name in fairness_by_model_race:
+        dp_selection_rates[name] = {}
+
+        for lbl in fairness_by_model_race[name]:
+            sr = fairness_by_model_race[name][lbl]["selection_rate"]
+            dp_selection_rates[name][lbl] = dp_aggregate([sr], epsilon=2.0)[0]
+
+
+# =========================
+# 🔹 SAFE JSON CONVERTER
+# =========================
+def convert_to_native(obj):
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
+
+
+# =========================
+# 🔹 DATASET STATS (SAFE)
+# =========================
+if "all_df" in globals():
+    dataset_stats = {
+        "total_records": int(len(all_df)),
         "race_distribution": all_df["race"].map(RACE_LABELS).value_counts().to_dict(),
-        "overall_eligibility_rate": round(float(all_df["truly_eligible"].mean()), 4),
-        "historical_approval_rate": round(float(all_df["historical_approved"].mean()), 4),
-        "approval_by_race": all_df.groupby(all_df["race"].map(RACE_LABELS))["historical_approved"].mean().round(3).to_dict(),
-        "income_by_race":   all_df.groupby(all_df["race"].map(RACE_LABELS))["income"].mean().round(0).to_dict()
-    },
-    "model_performance": {k: {kk:vv for kk,vv in v.items() if kk not in ["y_pred","y_prob"]} for k,v in results.items()},
-    "fairness_race":     fairness_by_model_race,
-    "fairness_gender":   fairness_by_model_gender,
-    "mitigated_performance": mitigated_overall,
-    "mitigated_fairness_race": mitigated_fairness,
-    "feature_importance": shap_approx,
-    "feature_importance_by_race": shap_by_race,
-    "dp_selection_rates": dp_selection_rates,
-    "fraud_case_study": {
-        "biased_detector": fraud_metrics_biased,
-        "fair_detector":   fraud_metrics_fair
+        "overall_eligibility_rate": round(float(all_df.get("truly_eligible", 0).mean()), 4),
+        "historical_approval_rate": round(float(all_df.get("historical_approved", 0).mean()), 4),
+        "approval_by_race": all_df.groupby(all_df["race"].map(RACE_LABELS))["historical_approved"].mean().round(3).to_dict() if "historical_approved" in all_df else {},
+        "income_by_race": all_df.groupby(all_df["race"].map(RACE_LABELS))["income"].mean().round(0).to_dict() if "income" in all_df else {}
     }
+else:
+    dataset_stats = {"info": "Dataset stats available only for synthetic dataset"}
+
+# ✅ ADD THIS before building payload
+fraud_results       = run_fraud_case_study()
+fraud_metrics_biased = fraud_results["biased"]
+fraud_metrics_fair   = fraud_results["fair"]
+# =========================
+# 🔹 BUILD PAYLOAD (SAFE)
+# =========================
+payload = {
+    "dataset_stats": dataset_stats,
+
+    "model_performance": {
+        k: {kk: convert_to_native(vv) for kk, vv in v.items() if kk not in ["y_pred", "y_prob"]}
+        for k, v in results.items()
+    } if "results" in globals() else {},
+
+    "fairness_race": fairness_by_model_race if "fairness_by_model_race" in globals() else {},
+    "fairness_gender": fairness_by_model_gender if "fairness_by_model_gender" in globals() else {},
+
+    "mitigated_performance": mitigated_overall if "mitigated_overall" in globals() else {},
+    "mitigated_fairness_race": mitigated_fairness if "mitigated_fairness" in globals() else {},
+
+    "feature_importance": shap_approx if "shap_approx" in globals() else {},
+    "feature_importance_by_race": shap_by_race if "shap_by_race" in globals() else {},
+
+    "dp_selection_rates": dp_selection_rates,
+
+    "fraud_case_study": {
+    "biased": fraud_metrics_biased,
+    "fair":   fraud_metrics_fair
+}
 }
 
+# =========================
+# 🔹 SAVE FILE
+# =========================
 with open("results.json", "w") as f:
-    json.dump(payload, f, indent=2)
+    json.dump(payload, f, indent=2, default=convert_to_native)
 
-print("\n✅ All results saved to /home/claude/results.json")
+print("\n✅ Results saved to results.json")
 
-# Print a summary of key fairness findings
+
+# =========================
+# 🔹 SUMMARY OUTPUT
+# =========================
 print("\n=== KEY FAIRNESS FINDINGS ===")
-for model in ["Random Forest"]:
-    print(f"\n{model} - Selection Rates by Race:")
-    for race_lbl, metrics in fairness_by_model_race[model].items():
-        print(f"  {race_lbl:12s}: SR={metrics['selection_rate']:.3f}  DI={metrics['disparate_impact']:.3f}  TPR={metrics['tpr']:.3f}")
 
-print("\nMitigated RF - Selection Rates by Race:")
-for race_lbl, metrics in mitigated_fairness.items():
-    print(f"  {race_lbl:12s}: SR={metrics['selection_rate']:.3f}  DI={metrics['disparate_impact']:.3f}  TPR={metrics['tpr']:.3f}")
+model_name = "Random Forest"
 
-print("\nFraud Case Study - False Positive Rate by Race:")
-for race_lbl in RACE_LABELS.values():
-    if race_lbl in fraud_metrics_biased:
-        print(f"  {race_lbl:12s}: Biased FPR={fraud_metrics_biased[race_lbl]['fpr']:.3f}  Fair FPR={fraud_metrics_fair[race_lbl]['fpr']:.3f}")
+if "fairness_by_model_race" in globals() and model_name in fairness_by_model_race:
+    print(f"\n{model_name} - Selection Rates by Race:")
+
+    for race_lbl, metrics in fairness_by_model_race[model_name].items():
+        print(
+            f"  {race_lbl:12s}: "
+            f"SR={metrics.get('selection_rate',0):.3f}  "
+            f"DI={metrics.get('disparate_impact',0):.3f}  "
+            f"TPR={metrics.get('tpr',0):.3f}"
+        )
+
+
+if "mitigated_fairness" in globals():
+    print("\nMitigated RF - Selection Rates by Race:")
+
+    for race_lbl, metrics in mitigated_fairness.items():
+        print(
+            f"  {race_lbl:12s}: "
+            f"SR={metrics.get('selection_rate',0):.3f}  "
+            f"DI={metrics.get('disparate_impact',0):.3f}  "
+            f"TPR={metrics.get('tpr',0):.3f}"
+        )
+
+
+if "fraud_metrics_biased" in globals():
+    print("\nFraud Case Study - False Positive Rate by Race:")
+
+    for race_lbl in RACE_LABELS.values():
+        if race_lbl in fraud_metrics_biased:
+            print(
+                f"  {race_lbl:12s}: "
+                f"Biased FPR={fraud_metrics_biased[race_lbl].get('fpr',0):.3f}  "
+                f"Fair FPR={fraud_metrics_fair[race_lbl].get('fpr',0):.3f}"
+            )

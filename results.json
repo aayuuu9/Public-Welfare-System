@@ -1,359 +1,339 @@
 {
   "dataset_stats": {
-    "total_records": 7500,
-    "race_distribution": {
-      "White": 4474,
-      "Hispanic": 1356,
-      "Black": 1121,
-      "Asian": 549
-    },
-    "overall_eligibility_rate": 0.6227,
-    "historical_approval_rate": 0.4112,
-    "approval_by_race": {
-      "Asian": 0.443,
-      "Black": 0.239,
-      "Hispanic": 0.319,
-      "White": 0.478
-    },
-    "income_by_race": {
-      "Asian": 29658.0,
-      "Black": 25028.0,
-      "Hispanic": 25970.0,
-      "White": 27644.0
-    }
+    "info": "Dataset stats available only for synthetic dataset"
   },
   "model_performance": {
     "Logistic Regression": {
-      "accuracy": 0.992,
-      "precision": 0.9957,
-      "recall": 0.9914,
-      "f1": 0.9936,
-      "auc": 0.9998
+      "accuracy": 0.7818,
+      "precision": 0.6147,
+      "recall": 0.2515,
+      "f1": 0.357,
+      "auc": 0.7767
     },
     "Random Forest": {
-      "accuracy": 0.9973,
-      "precision": 0.9974,
-      "recall": 0.9983,
-      "f1": 0.9979,
-      "auc": 1.0
+      "accuracy": 0.8001,
+      "precision": 0.6044,
+      "recall": 0.4918,
+      "f1": 0.5423,
+      "auc": 0.815
     },
     "Gradient Boosting": {
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "auc": 1.0
+      "accuracy": 0.8344,
+      "precision": 0.7787,
+      "recall": 0.4362,
+      "f1": 0.5592,
+      "auc": 0.8576
     }
   },
   "fairness_race": {
     "Logistic Regression": {
       "White": {
-        "selection_rate": 0.6128,
-        "tpr": 0.9883,
-        "fpr": 0.0117,
-        "accuracy": 0.9883,
-        "precision": 0.9926,
-        "n": 1108,
+        "selection_rate": 0.0506,
+        "tpr": 0.0,
+        "fpr": 0.0571,
+        "accuracy": 0.8354,
+        "precision": 0.0,
+        "n": 79,
         "disparate_impact": 1.0,
         "statistical_parity_diff": 0.0
       },
       "Black": {
-        "selection_rate": 0.6678,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 283,
-        "disparate_impact": 1.0898,
-        "statistical_parity_diff": 0.055
+        "selection_rate": 0.0973,
+        "tpr": 0.2727,
+        "fpr": 0.0366,
+        "accuracy": 0.786,
+        "precision": 0.72,
+        "n": 257,
+        "disparate_impact": 1.9229,
+        "statistical_parity_diff": 0.0467
       },
       "Hispanic": {
-        "selection_rate": 0.6152,
-        "tpr": 0.9953,
-        "fpr": 0.0,
-        "accuracy": 0.9971,
-        "precision": 1.0,
-        "n": 343,
-        "disparate_impact": 1.0039,
-        "statistical_parity_diff": 0.0024
+        "selection_rate": 0.069,
+        "tpr": 0.2955,
+        "fpr": 0.0377,
+        "accuracy": 0.8814,
+        "precision": 0.52,
+        "n": 725,
+        "disparate_impact": 1.3636,
+        "statistical_parity_diff": 0.0184
       },
       "Asian": {
-        "selection_rate": 0.5887,
-        "tpr": 0.9881,
-        "fpr": 0.0,
-        "accuracy": 0.9929,
-        "precision": 1.0,
-        "n": 141,
-        "disparate_impact": 0.9607,
-        "statistical_parity_diff": -0.0241
+        "selection_rate": 0.0635,
+        "tpr": 0.6667,
+        "fpr": 0.0333,
+        "accuracy": 0.9524,
+        "precision": 0.5,
+        "n": 63,
+        "disparate_impact": 1.2549,
+        "statistical_parity_diff": 0.0129
       }
     },
     "Random Forest": {
       "White": {
-        "selection_rate": 0.6164,
-        "tpr": 0.9971,
-        "fpr": 0.007,
-        "accuracy": 0.9955,
-        "precision": 0.9956,
-        "n": 1108,
+        "selection_rate": 0.1519,
+        "tpr": 0.3333,
+        "fpr": 0.1286,
+        "accuracy": 0.8101,
+        "precision": 0.25,
+        "n": 79,
         "disparate_impact": 1.0,
         "statistical_parity_diff": 0.0
       },
       "Black": {
-        "selection_rate": 0.6678,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 283,
-        "disparate_impact": 1.0834,
-        "statistical_parity_diff": 0.0514
+        "selection_rate": 0.1829,
+        "tpr": 0.4697,
+        "fpr": 0.0838,
+        "accuracy": 0.8016,
+        "precision": 0.6596,
+        "n": 257,
+        "disparate_impact": 1.2041,
+        "statistical_parity_diff": 0.031
       },
       "Hispanic": {
-        "selection_rate": 0.6181,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 343,
-        "disparate_impact": 1.0028,
-        "statistical_parity_diff": 0.0017
+        "selection_rate": 0.1434,
+        "tpr": 0.4545,
+        "fpr": 0.1005,
+        "accuracy": 0.8455,
+        "precision": 0.3846,
+        "n": 725,
+        "disparate_impact": 0.944,
+        "statistical_parity_diff": -0.0085
       },
       "Asian": {
-        "selection_rate": 0.5957,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 141,
-        "disparate_impact": 0.9664,
-        "statistical_parity_diff": -0.0207
+        "selection_rate": 0.127,
+        "tpr": 0.6667,
+        "fpr": 0.1,
+        "accuracy": 0.8889,
+        "precision": 0.25,
+        "n": 63,
+        "disparate_impact": 0.8361,
+        "statistical_parity_diff": -0.0249
       }
     },
     "Gradient Boosting": {
       "White": {
-        "selection_rate": 0.6155,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 1108,
+        "selection_rate": 0.0633,
+        "tpr": 0.3333,
+        "fpr": 0.0286,
+        "accuracy": 0.8987,
+        "precision": 0.6,
+        "n": 79,
         "disparate_impact": 1.0,
         "statistical_parity_diff": 0.0
       },
       "Black": {
-        "selection_rate": 0.6678,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 283,
-        "disparate_impact": 1.085,
-        "statistical_parity_diff": 0.0523
+        "selection_rate": 0.1595,
+        "tpr": 0.4697,
+        "fpr": 0.0524,
+        "accuracy": 0.8249,
+        "precision": 0.7561,
+        "n": 257,
+        "disparate_impact": 2.5197,
+        "statistical_parity_diff": 0.0962
       },
       "Hispanic": {
-        "selection_rate": 0.6181,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 343,
-        "disparate_impact": 1.0042,
-        "statistical_parity_diff": 0.0026
+        "selection_rate": 0.0621,
+        "tpr": 0.3864,
+        "fpr": 0.0173,
+        "accuracy": 0.9103,
+        "precision": 0.7556,
+        "n": 725,
+        "disparate_impact": 0.981,
+        "statistical_parity_diff": -0.0012
       },
       "Asian": {
-        "selection_rate": 0.5957,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 141,
-        "disparate_impact": 0.9678,
-        "statistical_parity_diff": -0.0198
+        "selection_rate": 0.0476,
+        "tpr": 0.6667,
+        "fpr": 0.0167,
+        "accuracy": 0.9683,
+        "precision": 0.6667,
+        "n": 63,
+        "disparate_impact": 0.752,
+        "statistical_parity_diff": -0.0157
       }
     }
   },
   "fairness_gender": {
     "Logistic Regression": {
       "Male": {
-        "selection_rate": 0.6272,
-        "tpr": 0.9896,
-        "fpr": 0.006,
-        "accuracy": 0.9912,
-        "precision": 0.9965,
-        "n": 912,
-        "disparate_impact": 0.6272,
-        "statistical_parity_diff": -0.3728
+        "selection_rate": 0.0626,
+        "tpr": 0.2177,
+        "fpr": 0.0435,
+        "accuracy": 0.8755,
+        "precision": 0.381,
+        "n": 2683,
+        "disparate_impact": 0.0626,
+        "statistical_parity_diff": -0.9374
       },
       "Female": {
-        "selection_rate": 0.6127,
-        "tpr": 0.9932,
-        "fpr": 0.0081,
-        "accuracy": 0.9927,
-        "precision": 0.9949,
-        "n": 963,
-        "disparate_impact": 0.6127,
-        "statistical_parity_diff": -0.3873
+        "selection_rate": 0.1162,
+        "tpr": 0.2575,
+        "fpr": 0.0541,
+        "accuracy": 0.7358,
+        "precision": 0.6767,
+        "n": 5458,
+        "disparate_impact": 0.1162,
+        "statistical_parity_diff": -0.8838
       }
     },
     "Random Forest": {
       "Male": {
-        "selection_rate": 0.6327,
-        "tpr": 1.0,
-        "fpr": 0.003,
-        "accuracy": 0.9989,
-        "precision": 0.9983,
-        "n": 912,
-        "disparate_impact": 0.6327,
-        "statistical_parity_diff": -0.3673
+        "selection_rate": 0.1372,
+        "tpr": 0.4524,
+        "fpr": 0.0984,
+        "accuracy": 0.8524,
+        "precision": 0.3614,
+        "n": 2683,
+        "disparate_impact": 0.1372,
+        "statistical_parity_diff": -0.8628
       },
       "Female": {
-        "selection_rate": 0.6137,
-        "tpr": 0.9966,
-        "fpr": 0.0054,
-        "accuracy": 0.9958,
-        "precision": 0.9966,
-        "n": 963,
-        "disparate_impact": 0.6137,
-        "statistical_parity_diff": -0.3863
+        "selection_rate": 0.2248,
+        "tpr": 0.4988,
+        "fpr": 0.1044,
+        "accuracy": 0.7745,
+        "precision": 0.6773,
+        "n": 5458,
+        "disparate_impact": 0.2248,
+        "statistical_parity_diff": -0.7752
       }
     },
     "Gradient Boosting": {
       "Male": {
-        "selection_rate": 0.6316,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 912,
-        "disparate_impact": 0.6316,
-        "statistical_parity_diff": -0.3684
+        "selection_rate": 0.0731,
+        "tpr": 0.4048,
+        "fpr": 0.0322,
+        "accuracy": 0.9061,
+        "precision": 0.6071,
+        "n": 2683,
+        "disparate_impact": 0.0731,
+        "statistical_parity_diff": -0.9269
       },
       "Female": {
-        "selection_rate": 0.6137,
-        "tpr": 1.0,
-        "fpr": 0.0,
-        "accuracy": 1.0,
-        "precision": 1.0,
-        "n": 963,
-        "disparate_impact": 0.6137,
-        "statistical_parity_diff": -0.3863
+        "selection_rate": 0.1653,
+        "tpr": 0.4418,
+        "fpr": 0.0438,
+        "accuracy": 0.7992,
+        "precision": 0.816,
+        "n": 5458,
+        "disparate_impact": 0.1653,
+        "statistical_parity_diff": -0.8347
       }
     }
   },
   "mitigated_performance": {
-    "accuracy": 0.9989,
-    "precision": 1.0,
-    "recall": 0.9983,
-    "f1": 0.9991,
-    "auc": 1.0
+    "accuracy": 0.7986,
+    "precision": 0.601,
+    "recall": 0.4857,
+    "f1": 0.5372,
+    "auc": 0.8143
   },
   "mitigated_fairness_race": {
     "White": {
-      "selection_rate": 0.6137,
-      "tpr": 0.9971,
-      "fpr": 0.0,
-      "accuracy": 0.9982,
-      "precision": 1.0,
-      "n": 1108,
+      "selection_rate": 0.1266,
+      "tpr": 0.3333,
+      "fpr": 0.1,
+      "accuracy": 0.8354,
+      "precision": 0.3,
+      "n": 79,
       "disparate_impact": 1.0,
       "statistical_parity_diff": 0.0
     },
     "Black": {
-      "selection_rate": 0.6678,
-      "tpr": 1.0,
-      "fpr": 0.0,
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "n": 283,
-      "disparate_impact": 1.0882,
-      "statistical_parity_diff": 0.0541
+      "selection_rate": 0.1751,
+      "tpr": 0.4545,
+      "fpr": 0.0785,
+      "accuracy": 0.8016,
+      "precision": 0.6667,
+      "n": 257,
+      "disparate_impact": 1.3831,
+      "statistical_parity_diff": 0.0485
     },
     "Hispanic": {
-      "selection_rate": 0.6181,
-      "tpr": 1.0,
-      "fpr": 0.0,
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "n": 343,
-      "disparate_impact": 1.0072,
-      "statistical_parity_diff": 0.0044
+      "selection_rate": 0.1366,
+      "tpr": 0.4659,
+      "fpr": 0.0911,
+      "accuracy": 0.8552,
+      "precision": 0.4141,
+      "n": 725,
+      "disparate_impact": 1.079,
+      "statistical_parity_diff": 0.01
     },
     "Asian": {
-      "selection_rate": 0.5957,
-      "tpr": 1.0,
-      "fpr": 0.0,
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "n": 141,
-      "disparate_impact": 0.9707,
-      "statistical_parity_diff": -0.018
+      "selection_rate": 0.127,
+      "tpr": 0.6667,
+      "fpr": 0.1,
+      "accuracy": 0.8889,
+      "precision": 0.25,
+      "n": 63,
+      "disparate_impact": 1.0032,
+      "statistical_parity_diff": 0.0004
     }
   },
   "feature_importance": {
-    "age": -0.00069,
-    "income": 0.34565,
-    "hh_size": 0.19744,
-    "employed": 0.01163,
-    "disability": 0.09435,
-    "prior_benefit": -0.00043
+    "age": 0.02657,
+    "fnlwgt": -0.00054,
+    "education_num": 0.03659,
+    "capital_gain": 0.0438,
+    "capital_loss": 0.01752,
+    "hours_per_week": 0.00828
   },
   "feature_importance_by_race": {
     "White": {
-      "age": -0.00162,
-      "income": 0.34801,
-      "hh_size": 0.19711,
-      "employed": 0.01011,
-      "disability": 0.09964,
-      "prior_benefit": -0.00072
+      "age": 0.00506,
+      "fnlwgt": -0.0,
+      "education_num": -0.0,
+      "capital_gain": 0.00506,
+      "capital_loss": 0.01519,
+      "hours_per_week": -0.01013
     },
     "Black": {
-      "age": 0.0,
-      "income": 0.32085,
-      "hh_size": 0.21131,
-      "employed": 0.01343,
-      "disability": 0.09894,
-      "prior_benefit": 0.0
+      "age": 0.04125,
+      "fnlwgt": 0.01946,
+      "education_num": 0.03735,
+      "capital_gain": 0.03346,
+      "capital_loss": 0.00467,
+      "hours_per_week": 0.01634
     },
     "Hispanic": {
-      "age": 0.0,
-      "income": 0.35102,
-      "hh_size": 0.21808,
-      "employed": 0.00758,
-      "disability": 0.0723,
-      "prior_benefit": 0.0
+      "age": -0.0011,
+      "fnlwgt": -0.02069,
+      "education_num": 0.00055,
+      "capital_gain": 0.03338,
+      "capital_loss": 0.01766,
+      "hours_per_week": -0.01434
     },
     "Asian": {
-      "age": 0.0,
-      "income": 0.32908,
-      "hh_size": 0.1461,
-      "employed": 0.00567,
-      "disability": 0.14326,
-      "prior_benefit": 0.0
+      "age": -0.06032,
+      "fnlwgt": -0.04762,
+      "education_num": -0.04444,
+      "capital_gain": 0.06349,
+      "capital_loss": -0.00952,
+      "hours_per_week": -0.02857
     }
   },
   "dp_selection_rates": {
     "Logistic Regression": {
-      "White": 0.6973,
-      "Black": 0.7137,
-      "Hispanic": 0.7917,
-      "Asian": 0.7394
+      "White": 0,
+      "Black": 0,
+      "Hispanic": 0,
+      "Asian": 0
     },
     "Random Forest": {
-      "White": 1.0724,
-      "Black": 2.455,
-      "Hispanic": 0.9193,
-      "Asian": 0.5338
+      "White": 0.0074,
+      "Black": 0.0384,
+      "Hispanic": 0,
+      "Asian": 0
     },
     "Gradient Boosting": {
-      "White": 0.5756,
-      "Black": -0.7511,
-      "Hispanic": 0.0481,
-      "Asian": 0.2034
+      "White": 0,
+      "Black": 0.015,
+      "Hispanic": 0,
+      "Asian": 0
     }
   },
   "fraud_case_study": {
-    "biased_detector": {
+    "biased": {
       "White": {
         "selection_rate": 0.1259,
         "tpr": 0.4103,
@@ -395,7 +375,7 @@
         "statistical_parity_diff": 0.0002
       }
     },
-    "fair_detector": {
+    "fair": {
       "White": {
         "selection_rate": 0.1501,
         "tpr": 0.5581,
