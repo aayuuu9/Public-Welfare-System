@@ -40,7 +40,7 @@ def compute_reweigh_weights(race_labels, y_labels):
 # ─────────────────────────────────────────────
 from data_loader import load_real_data, load_synthetic_data
 
-USE_REAL_DATA = True
+USE_REAL_DATA = False
 
 if USE_REAL_DATA:
     df = load_real_data()
