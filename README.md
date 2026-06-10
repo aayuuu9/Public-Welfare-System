@@ -33,3 +33,6 @@ No server required — it's fully self-contained.
 - Python 3.8+
 - Node.js not required
 - Works on Mac, Windows, Linux
+
+
+This report presents a comprehensive end-to-end machine learning system designed to support fair, equitable, and auditable public welfare decisions. Leveraging synthetic datasets calibrated to SNAP, Medicaid, and Unemployment Insurance program characteristics, we demonstrate how algorithmic systems can replicate historical discrimination even when explicitly race-blind. We apply IBM AIF360 methodology to compute disparate impact, statistical parity difference, and equalized odds metrics; use permutation-based SHAP-style explanations to surface proxy discrimination; implement reweighing and threshold calibration for bias mitigation; and apply differential privacy (ε=2.0) to protect sensitive aggregate statistics. Key findings include a 23.9 percentage-point historical approval gap between White (47.8%) and Black (23.9%) applicants, a 2.9× false positive rate disparity in biased fraud detection that reduces to 1.8× after threshold equalization, and that income—rather than race—serves as the primary proxy variable perpetuating inequitable outcomes. We conclude with six policy recommendations for responsible deployment of welfare ML systems.
